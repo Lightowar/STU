@@ -18,6 +18,12 @@ Vector* newVector (float x, float y) {
 	v->y=y;
 	return v;
 }
+Vector* copyVector (Vector* v) {
+	Vector* v2 = initVector();
+	v2->x=v->x;
+	v2->y=v->y;
+	return v2;
+}
 
 void freeVector(Vector* v) {
 	free(v);

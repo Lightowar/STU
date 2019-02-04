@@ -7,11 +7,12 @@
 #include <MLV/MLV_all.h>
 #include <time.h>
 
-Object* createMissile (Scene* s, int x, int y, Object* o) {
+Object* createMissile (Scene* s, float x, float y, float vitX, float vitY, Object* o) {
 	Object* m=newObject();
-	setY(getVit(m), -5);
+	setX(getVit(m), vitX);
+	setY(getVit(m), vitY-5);
 	setX(getPos(m), x);
-	setY(getPos(m), y);
+	setY(getPos(m), y-28);
 	setKillTime(m, 100);
 	addObject(s, m);
 	return m;
@@ -25,6 +26,8 @@ int main (int argc, char* argv[]) {
 	Object* o = newObject();
 	Vector* vit=getVit(o);
 	Vector* pos=getPos(o);
+	setDrawType(o, DRAW_IMAGE);
+	setDrawString(o, "DATA/spaceship.png");
 	addObject(s, o);
 	getX(pos);
 	
@@ -52,7 +55,7 @@ int main (int argc, char* argv[]) {
 			targetY*=0.707107;
 		}
 		if (MLV_get_keyboard_state(MLV_KEYBOARD_a)==MLV_PRESSED) {
-			createMissile(s, getX(pos), getY(pos), o);
+			createMissile(s, getX(pos), getY(pos), getX(vit), getY(vit), o);
 			
 		}
 		float accX=targetX-x;

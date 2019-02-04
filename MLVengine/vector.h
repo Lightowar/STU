@@ -4,6 +4,7 @@
 typedef struct vector Vector;
 
 Vector* newVector (float x, float y);
+Vector* copyVector (Vector* v);
 void destroyVector(Vector** v);
 float getX (Vector* v);
 float getY (Vector* v);

@@ -7,6 +7,9 @@ struct object {
 	Vector* pos;
 	Vector* vit;
 	int killTime;
+	DRAW_TYPE drawType;
+	Vector* drawScale;
+	char* drawString;
 };
 
 Object* initObject() {
@@ -41,19 +44,37 @@ Vector* getPos(Object* o) {
 void setPos(Object* o, Vector* pos) {
 	o->pos=pos;
 }
-
 Vector* getVit(Object* o) {
 	return o->vit;
 }
 void setVit(Object* o, Vector* vit) {
 	o->vit=vit;
 }
-
 int getKillTime(Object* o) {
 	return o->killTime;
 }
 void setKillTime(Object* o, int t) {
 	o->killTime = t;
+}
+DRAW_TYPE getDrawType(Object* o) {
+	return o->drawType;
+}
+void setDrawType(Object* o, DRAW_TYPE type) {
+	o->drawType = type;
+}
+Vector*
+
+ getDrawScale(Object* o) {
+	return o->drawScale;
+}
+void setDrawScale(Object* o, Vector* v) {
+	o->drawScale = v;
+}
+char* getDrawString(Object* o) {
+	return o->drawString;
+}
+void setDrawString(Object* o, char* string) {
+	o->drawString = string;
 }
 
 void applyVit(Object* o) {
