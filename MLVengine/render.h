@@ -3,8 +3,8 @@
 
 #include "scene.h"
 
-void renderInit();
-void drawObject(Object** o);
+void renderInit(Scene* s);
 void renderScene(Scene* s);
+void debugScene(Scene* s);
 
 #endif

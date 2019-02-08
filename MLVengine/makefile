@@ -1,19 +1,22 @@
 CFLAGS = -g -O2 -Wall -Werror `pkg-config --cflags MLV`
 LDLIBS = `pkg-config --libs MLV`
 
-all: vector.o scene.o object.o render.o
+all: vector.o scene.o object.o render.o set.o
 	
 vector.o: vector.c
 	gcc -o vector.o -c vector.c $(CFLAGS)
 
-scene.o: scene.c object.h
+scene.o: scene.c object.o set.o
 	gcc -o scene.o -c scene.c $(CFLAGS)
 
-object.o: object.c vector.h
+object.o: object.c vector.o
 	gcc -o object.o -c object.c $(CFLAGS)
 
-render.o: render.c scene.h
+render.o: render.c scene.o
 	gcc -o render.o -c render.c $(CFLAGS) $(LDLIBS)
+
+set.o: set.c
+	gcc -o set.o -c set.c $(CFLAGS)
 
 clean:
 	rm -rf *.o

@@ -3,83 +3,51 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-typedef struct maillon Maillon;
-
-struct maillon {
-	Object** elem;
-	Maillon* next;
-};
-
 struct scene {
-	Maillon* chaine;
+	Set* set[NBR_LAYER];
+	Object* camera;
+	Vector* size;
 };
 
 Scene* initScene() {
 	return (Scene*)malloc(sizeof(Scene));
 }
 
-Scene* newScene() {
+Scene* newScene(int x, int y) {
 	Scene* s = initScene();
-	s->chaine=NULL;
+	s->size=newVector(x, y);
+	int i;
+	for (i=0; i<NBR_LAYER; i++) s->set[i]=newSet();
 	return s;
 }
-
-int addObject(Scene* s, Object* o) {
-	Maillon* m;
-	for (m=s->chaine; m!=NULL; m=m->next) {
-		if (*(m->elem)==o) {
-			return 0;
-		}
-	}
-	Maillon* m2=(Maillon*)malloc(sizeof(Maillon));
-	Object** obj=(Object**)malloc(sizeof(Object*));
-	*obj=o;
-	m2->next=s->chaine;
-	m2->elem=obj;
-	s->chaine=m2;
-	return 1;
-	
+void setCamera(Scene* s, Object* o) {
+	s->camera=o;
+}
+Object* getCamera(Scene* s) {
+	return s->camera;
+}
+void setSize(Scene* s, Vector* v) {
+	s->size=v;
+}
+Vector* getSize(Scene* s) {
+	return s->size;
 }
 
-int removeObject(Scene* s, Object* o) {
-	Maillon* m;
-	Maillon* prec=NULL;
-	for (m=s->chaine; m!=NULL; m=m->next) {
-		if (*(m->elem)==o) {
-			if (prec==NULL) {
-				s->chaine=m->next;
-			} else {
-				prec->next=m->next;
-			}
-			free(m->elem);
-			free(m);
-			return 1;
-		}
-		prec=m;
-	}
-	return 0;
+int addObject(Scene* s, Object* o, int layer) {
+	return addToSet(s->set[layer], o);
 }
 
-void eachObjects(Scene* s, void (*function)(Object**)) {
-	Maillon* m;
-	Maillon* prec = NULL;
-	for (m=s->chaine; m!=NULL;) {
-		if (*(m->elem)!=NULL) {
-			(*function)(m->elem);
-			prec=m;
-			m=m->next;
-		} else {
-			Maillon* m2 = m->next;
-			free(m->elem);
-			free(m);
-			if (prec==NULL) {
-				s->chaine=m2;
-			} else {
-				prec->next=m2;
-			}
-			m=m2;
-		}
-	}
+int removeObject(Scene* s, Object* o, int layer) {
+	return removeFromSet(s->set[layer], o);
+}
+
+void eachObjectScene(Scene* s, void (*function)(Object**)) {
+	int i;
+	for (i=0; i<NBR_LAYER; i++) eachSet(s->set[i], (void(*)(void**))function);
+}
+
+void eachObjectLayer(Scene* s, int layer, void (*function)(Object**)) {
+	eachSet(s->set[layer], (void(*)(void**))function);
 }
 
 void applyVitPtr(Object** o) {
@@ -87,6 +55,6 @@ void applyVitPtr(Object** o) {
 }
 
 void iterate(Scene* s) {
-	eachObjects(s, applyVitPtr);
-	eachObjects(s, liveAndDie);
+	eachObjectScene(s, applyVitPtr);
+	eachObjectScene(s, liveAndDie);
 }
