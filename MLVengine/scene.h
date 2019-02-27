@@ -14,8 +14,8 @@ void setCamera(Scene* s, Object* o);
 Object* getCamera(Scene* s);
 void setSize(Scene* s, Vector* v);
 Vector* getSize(Scene* s);
-void eachObjectScene(Scene* s, void (*function)(Object**));
-void eachObjectLayer(Scene* s, int layer, void (*function)(Object**));
+void eachObjectScene(Scene* s, void (*function)(Object*));
+void eachObjectLayer(Scene* s, int layer, void (*function)(Object*));
 void iterate(Scene* s);
 
 #endif

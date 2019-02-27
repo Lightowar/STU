@@ -15,8 +15,10 @@
 
 typedef struct object Object;
 
+Object* getObject(Object* o);
+
 Object* newObject();
-void destroyObject(Object** o, int hard);
+void destroyObject(Object* o, int hard);
 Vector* getPos(Object* o);
 void setPos(Object* o, Vector* pos);
 Vector* getVit(Object* o);
@@ -35,8 +37,11 @@ Vector* getHitbox(Object* o);
 void setHitbox(Object* o, Vector* v);
 void* getImage(Object* o);
 void setImage(Object* o, void* i);
+void* getCarac(Object* o);
+void setCarac(Object* o, void* c);
+
 void applyVit(Object* o);
-void liveAndDie(Object** o);
+int liveAndDie(Object* o);
 int touch(Object* o1, Object* o2);
 void printObject(Object* o);
 

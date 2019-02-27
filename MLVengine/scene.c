@@ -13,11 +13,18 @@ Scene* initScene() {
 	return (Scene*)malloc(sizeof(Scene));
 }
 
+int cmpEqu(Object* o1, Object* o2) {
+	return (getObject(o1)==getObject(o2));
+}
+
 Scene* newScene(int x, int y) {
 	Scene* s = initScene();
 	s->size=newVector(x, y);
 	int i;
-	for (i=0; i<NBR_LAYER; i++) s->set[i]=newSet();
+	for (i=0; i<NBR_LAYER; i++) {
+		s->set[i]=newSet();
+		setEqual(s->set[i], (int (*)(void*, void*))cmpEqu);
+	}
 	return s;
 }
 void setCamera(Scene* s, Object* o) {
@@ -41,20 +48,16 @@ int removeObject(Scene* s, Object* o, int layer) {
 	return removeFromSet(s->set[layer], o);
 }
 
-void eachObjectScene(Scene* s, void (*function)(Object**)) {
+void eachObjectScene(Scene* s, void (*function)(Object*)) {
 	int i;
-	for (i=0; i<NBR_LAYER; i++) eachSet(s->set[i], (void(*)(void**))function);
+	for (i=0; i<NBR_LAYER; i++) eachSet(s->set[i], (void(*)(void*))function);
 }
 
-void eachObjectLayer(Scene* s, int layer, void (*function)(Object**)) {
-	eachSet(s->set[layer], (void(*)(void**))function);
-}
-
-void applyVitPtr(Object** o) {
-	applyVit(*o);
+void eachObjectLayer(Scene* s, int layer, void (*function)(Object*)) {
+	eachSet(s->set[layer], (void(*)(void*))function);
 }
 
 void iterate(Scene* s) {
-	eachObjectScene(s, applyVitPtr);
-	eachObjectScene(s, liveAndDie);
+	eachObjectScene(s, applyVit);
+	eachObjectScene(s, (void(*)(Object*))liveAndDie);
 }

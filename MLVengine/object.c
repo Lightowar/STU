@@ -2,6 +2,9 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include "hashmap.h"
+
+Hashmap* objMap=NULL;
 
 struct object {
 	Vector* pos;
@@ -13,7 +16,15 @@ struct object {
 	Vector* hitbox;
 	char* drawString;
 	void* image;
+	void* carac;
 };
+
+Object* getObject(Object* o) {
+	if (o==NULL) return NULL;
+	if (objMap==NULL) objMap=newHashmap();
+	return getFromMap(objMap, o);
+}
+
 
 Object* initObject() {
 	Object* o = malloc(sizeof(Object));
@@ -33,19 +44,28 @@ Object* newObject() {
 	o->hitboxType=HITBOX_NONE;
 	o->hitbox=newVector(0, 0);
 	o->image=NULL;
-	
+	o->carac=NULL;
+	if (objMap==NULL) {
+		objMap=newHashmap();
+	}
+	addInMap(objMap, o);
 	return o;
 }
-void destroyObject(Object** o, int hard) {
+void destroyObject(Object* o, int hard) {
 	if (hard) {
-		Vector* pos=getPos(*o);
-		Vector* vit=getVit(*o);
+		Vector* pos=getPos(o);
+		Vector* vit=getVit(o);
+		Vector* hit=getHitbox(o);
+		Vector* dra=getDrawScale(o);
 		destroyVector(&pos);
 		destroyVector(&vit);
-		free((*o)->image);
+		destroyVector(&hit);
+		destroyVector(&dra);
+		if (o->carac != NULL) free((o)->carac);
 	}
-	freeObject(*o);
-	*o=NULL;
+	if (objMap==NULL) objMap=newHashmap();
+	removeFromMap(objMap, o);
+	freeObject(o);
 }
 
 Vector* getPos(Object* o) {
@@ -102,19 +122,26 @@ void* getImage(Object* o) {
 void setImage(Object* o, void* i) {
 	o->image = i;
 }
+void* getCarac(Object* o) {
+	return o->carac;
+}
+void setCarac(Object* o, void* c) {
+	o->carac = c;
+}
 
 void applyVit(Object* o) {
 	addVector(o->pos, o->vit);
 }
 
-void liveAndDie(Object** o) {
-	int i = getKillTime(*o);
-	if (i<0) return;
+int liveAndDie(Object* o) {
+	int i = getKillTime(o);
+	if (i<0) return -1;
 	if (i==0) {
 		destroyObject(o, 1);
-	} else {
-		setKillTime(*o, i-1);
+		return 1;
 	}
+	setKillTime(o, i-1);
+	return 0;	
 }
 
 int touch(Object* o1, Object* o2) {
