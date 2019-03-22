@@ -4,7 +4,8 @@
 #include "scene.h"
 
 void renderInit(Scene* s);
-void renderScene(Scene* s);
-void debugScene(Scene* s);
+void renderEnd();
+void renderScene(Scene* s, double time);
+void debugScene(Scene* s, double time);
 
 #endif

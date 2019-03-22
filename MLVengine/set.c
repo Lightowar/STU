@@ -26,15 +26,15 @@ Set* newSet() {
 void freeSet(Set* s) {
 	free(s);
 }
-void destroyChaine(Maillon* m) {
+void destroyChaine(Set* s, Maillon* m) {
 	if (m!=NULL) {
-		destroyChaine(m->next);
-		free(m->elem);
+		destroyChaine(s, m->next);
+		if (!(s->equ!=NULL && s->equ(m->elem, NULL))) free(m->elem);
 		free(m);
 	}
 }
 void destroySet(Set* s) {
-	destroyChaine(s->chaine);
+	destroyChaine(s, s->chaine);
 	freeSet(s);
 }
 
@@ -80,12 +80,12 @@ int removeFromSet(Set* s, void* o) {
 	return 0;
 }
 
-void eachSet(Set* s, void (*function)(void*)) {
+void eachSet(Set* s, void (*function)(void**)) {
 	Maillon* m;
 	Maillon* prec = NULL;
 	for (m=s->chaine; m!=NULL;) {
 		if (!(m->elem==NULL || (s->equ!=NULL && s->equ(m->elem, NULL)))) {
-			(*function)(m->elem);
+			(*function)(&(m->elem));
 			prec=m;
 			m=m->next;
 		} else {

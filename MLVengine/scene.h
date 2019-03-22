@@ -12,7 +12,7 @@ int addObject(Scene* s, Object* o, int layer);
 int removeObject(Scene* s, Object* o, int layer);
 void setCamera(Scene* s, Object* o);
 Object* getCamera(Scene* s);
-void setSize(Scene* s, Vector* v);
+void setSize(Scene* s, Vector v);
 Vector* getSize(Scene* s);
 void eachObjectScene(Scene* s, void (*function)(Object*));
 void eachObjectLayer(Scene* s, int layer, void (*function)(Object*));

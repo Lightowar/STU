@@ -2,18 +2,18 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "hashmap.h"
+#include "hashset.h"
 
-Hashmap* objMap=NULL;
+Hashset* objMap=NULL;
 
 struct object {
-	Vector* pos;
-	Vector* vit;
+	Vector pos;
+	Vector vit;
 	int killTime;
 	DRAW_TYPE drawType;
-	Vector* drawScale;
+	Vector drawScale;
 	HITBOX_TYPE hitboxType;
-	Vector* hitbox;
+	Vector hitbox;
 	char* drawString;
 	void* image;
 	void* carac;
@@ -21,8 +21,8 @@ struct object {
 
 Object* getObject(Object* o) {
 	if (o==NULL) return NULL;
-	if (objMap==NULL) objMap=newHashmap();
-	return getFromMap(objMap, o);
+	if (objMap==NULL) objMap=newHashset();
+	return getFromHashset(objMap, o);
 }
 
 
@@ -46,38 +46,38 @@ Object* newObject() {
 	o->image=NULL;
 	o->carac=NULL;
 	if (objMap==NULL) {
-		objMap=newHashmap();
+		objMap=newHashset();
 	}
-	addInMap(objMap, o);
+	addInHashset(objMap, o);
 	return o;
 }
 void destroyObject(Object* o, int hard) {
 	if (hard) {
-		Vector* pos=getPos(o);
-		Vector* vit=getVit(o);
-		Vector* hit=getHitbox(o);
-		Vector* dra=getDrawScale(o);
+		Vector pos=o->pos;
+		Vector vit=o->vit;
+		Vector hit=o->hitbox;
+		Vector dra=o->drawScale;
 		destroyVector(&pos);
 		destroyVector(&vit);
 		destroyVector(&hit);
 		destroyVector(&dra);
-		if (o->carac != NULL) free((o)->carac);
+		free((o)->carac);
 	}
-	if (objMap==NULL) objMap=newHashmap();
-	removeFromMap(objMap, o);
+	if (objMap==NULL) objMap=newHashset();
+	removeFromHashset(objMap, o);
 	freeObject(o);
 }
 
 Vector* getPos(Object* o) {
-	return o->pos;
+	return &(o->pos);
 }
-void setPos(Object* o, Vector* pos) {
+void setPos(Object* o, Vector pos) {
 	o->pos=pos;
 }
 Vector* getVit(Object* o) {
-	return o->vit;
+	return &(o->vit);
 }
-void setVit(Object* o, Vector* vit) {
+void setVit(Object* o, Vector vit) {
 	o->vit=vit;
 }
 int getKillTime(Object* o) {
@@ -93,9 +93,9 @@ void setDrawType(Object* o, DRAW_TYPE type) {
 	o->drawType = type;
 }
 Vector* getDrawScale(Object* o) {
-	return o->drawScale;
+	return &(o->drawScale);
 }
-void setDrawScale(Object* o, Vector* v) {
+void setDrawScale(Object* o, Vector v) {
 	o->drawScale = v;
 }
 char* getDrawString(Object* o) {
@@ -111,9 +111,9 @@ void setHitboxType(Object* o, HITBOX_TYPE type) {
 	o->hitboxType = type;
 }
 Vector* getHitbox(Object* o) {
-	return o->hitbox;
+	return &(o->hitbox);
 }
-void setHitbox(Object* o, Vector* v) {
+void setHitbox(Object* o, Vector v) {
 	o->hitbox = v;
 }
 void* getImage(Object* o) {
@@ -130,7 +130,7 @@ void setCarac(Object* o, void* c) {
 }
 
 void applyVit(Object* o) {
-	addVector(o->pos, o->vit);
+	addVector(&(o->pos), o->vit);
 }
 
 int liveAndDie(Object* o) {
@@ -146,15 +146,15 @@ int liveAndDie(Object* o) {
 
 int touch(Object* o1, Object* o2) {
 	if (o1->hitboxType==HITBOX_RECT && o1->hitboxType==HITBOX_RECT) {
-		float x1=getX(getPos(o1));
-		float y1=getY(getPos(o1));
-		float x2=getX(getPos(o2));
-		float y2=getY(getPos(o2));
+		float x1=getX(*getPos(o1));
+		float y1=getY(*getPos(o1));
+		float x2=getX(*getPos(o2));
+		float y2=getY(*getPos(o2));
 		
-		float w1=getX(getHitbox(o1))/2;
-		float h1=getY(getHitbox(o1))/2;
-		float w2=getX(getHitbox(o2))/2;
-		float h2=getY(getHitbox(o2))/2;
+		float w1=getX(*getHitbox(o1))/2;
+		float h1=getY(*getHitbox(o1))/2;
+		float w2=getX(*getHitbox(o2))/2;
+		float h2=getY(*getHitbox(o2))/2;
 		
 		float l1=x1-w1;
 		float r1=x1+w1;

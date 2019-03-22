@@ -1,3 +1,2 @@
-make -C MLVengine
-make
+make mainEngine
 ./main

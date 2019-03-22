@@ -6,7 +6,7 @@
 struct scene {
 	Set* set[NBR_LAYER];
 	Object* camera;
-	Vector* size;
+	Vector size;
 };
 
 Scene* initScene() {
@@ -33,11 +33,11 @@ void setCamera(Scene* s, Object* o) {
 Object* getCamera(Scene* s) {
 	return s->camera;
 }
-void setSize(Scene* s, Vector* v) {
+void setSize(Scene* s, Vector v) {
 	s->size=v;
 }
 Vector* getSize(Scene* s) {
-	return s->size;
+	return &(s->size);
 }
 
 int addObject(Scene* s, Object* o, int layer) {
@@ -49,12 +49,18 @@ int removeObject(Scene* s, Object* o, int layer) {
 }
 
 void eachObjectScene(Scene* s, void (*function)(Object*)) {
+	void l (void** o) {
+		function(*o);
+	}
 	int i;
-	for (i=0; i<NBR_LAYER; i++) eachSet(s->set[i], (void(*)(void*))function);
+	for (i=0; i<NBR_LAYER; i++) eachSet(s->set[i], l);
 }
 
 void eachObjectLayer(Scene* s, int layer, void (*function)(Object*)) {
-	eachSet(s->set[layer], (void(*)(void*))function);
+	void l (void** o) {
+		function(*o);
+	}
+	eachSet(s->set[layer], l);
 }
 
 void iterate(Scene* s) {

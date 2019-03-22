@@ -5,58 +5,68 @@
 #include <stdlib.h>
 #include "object.h"
 #include "vector.h"
+#include "hashset.h"
 
-#define MAP_SIZE 256
 
-typedef struct maillon Maillon;
+typedef struct renderElem RenderElem;
 
-struct maillon {
-	MLV_Image* elem;
-	char* str;
-	Maillon* next;
+struct renderElem {
+	MLV_Image** elem;
+	int nbrImg;
+	char str[128];
 	int decX;
 	int decY;
+	double time;
+	double timeMax;
 };
 
-Maillon* renderMap[MAP_SIZE];
+#include "read_dir.c"
+
+Hashset* renderMap=NULL;
 
 int hashStr(char* str) {
 	if (str[0]==0) {
 		return 0;
 	}			
 	int h = str[0]+hashStr(str+1);
-	if (h>=MAP_SIZE) {
-		h-=MAP_SIZE;
+	if (h>=HASHSET_SIZE) {
+		h-=HASHSET_SIZE;
 	}
 	return h;
 }
+int hashElem(void* elem) {
+	char* str = (char*)((RenderElem*)elem)->str;
+	return hashStr(str);
+}
+int equElem(void* elem1, void* elem2) {
+	if (elem1==NULL || elem2==NULL) return (elem1==NULL && elem2==NULL);
+	return (strcmp(((RenderElem*)elem1)->str, ((RenderElem*)elem2)->str)==0);
+}
 
-Maillon* getImageFromIndex(char* str) {
-	int h = hashStr(str);
-	Maillon* m = renderMap[h];
-	while (m!=NULL) {
-		if (strcmp(m->str, str)==0) {
-			return m;
-		}
-		m=m->next;
-	}
-	m=renderMap[h];
-	Maillon* m2 = (Maillon*)malloc(sizeof(Maillon));
-	m2->elem=MLV_load_image(str);
-	m2->str=str;
-	m2->next=m;
-	int x, y;
-	
-	MLV_get_image_size(m2->elem, &x, &y);
-	m2->decX=x/2;
-	
-	m2->decY=y/2;
-	renderMap[h]=m2;
-	return m2;
+RenderElem* getImageFromIndex(char* str) {
+	RenderElem r = {NULL, 0, {0}, 1, 1, 0, 0};
+	strcpy(r.str, str);
+	return getFromHashset(renderMap, &r);
 }
 
 void renderInit(Scene* s) {
-	MLV_create_window("test", "test", getXInt(getSize(s)), getYInt(getSize(s)));
+	MLV_create_window("test", "test", getXInt(*getSize(s)), getYInt(*getSize(s)));
+	if (renderMap == NULL) renderMap=newHashset();
+	setHashHashset(renderMap, hashElem);
+	setEqualHashset(renderMap, equElem);
+}
+
+void renderEnd() {
+	void freeImg(void** img) {
+		int i;
+		for (i=0; i<(*(RenderElem**)img)->nbrImg; i++) {
+			MLV_free_image(((RenderElem*)(*img))->elem[i]);
+		}
+		free((RenderElem*)(*img));
+	}
+	eachHashset(renderMap, freeImg);
+	//destroyHashset(renderMap);
+	return;
 }
 
 MLV_Color stringToColor(char* str) {
@@ -66,84 +76,65 @@ MLV_Color stringToColor(char* str) {
 	return MLV_COLOR_BLACK;
 }
 
-typedef struct renderImg RenderImg;
-struct renderImg {
-	MLV_Image* image;
-	char* string;
-};
-
-RenderImg* newRenderImg() {
-	RenderImg* rimg=(RenderImg*)malloc(sizeof(RenderImg));
-	rimg->image=NULL;
-	rimg->string="";
-	return rimg;
-}
-
-void drawObject(Scene* s, Object* o, int camEnable) {
+void drawObject(Scene* s, Object* o, int camEnable, double time) {
 	Vector* v = getPos(o);
 	int x=0; int y=0;
 	if (camEnable) {
-		x+=getXInt(getSize(s))/2;
-		y+=getYInt(getSize(s))/2;
+		x+=getXInt(*getSize(s))/2;
+		y+=getYInt(*getSize(s))/2;
 		Object* cam=getCamera(s);
 		if (cam!=NULL) {
-			x-=getXInt(getPos(cam));
-			y-=getYInt(getPos(cam));
+			x-=getXInt(*getPos(cam));
+			y-=getYInt(*getPos(cam));
 		}
 	}
-	x+=getXInt(v);
-	y+=getYInt(v);
+	x+=getXInt(*v);
+	y+=getYInt(*v);
 	char* str = getDrawString(o);
 	if (str!=NULL && getDrawType(o)==DRAW_IMAGE) {
-		RenderImg* r=getImage(o);
-		if (r==NULL) {
-			r=newRenderImg();
-			setImage(o, r);
+		RenderElem* img = getImageFromIndex(str);
+		if (img==NULL) {
+			img=readDir(str);
+			addInHashset(renderMap, img);
 		}
-		
-		if (strcmp(r->string, str)!=0) {
-			r->image=getImageFromIndex(str)->elem;
-			r->string=str;
-		}
-		Maillon* img = getImageFromIndex(str);
-		MLV_draw_image(img->elem, x-img->decX, y-img->decY);
+		MLV_draw_image(getImageRender(img, time), x-img->decX, y-img->decY);
 	}
 	if (getDrawType(o)==DRAW_OVAL) {
 		Vector* scale=getDrawScale(o);
-		MLV_draw_filled_ellipse(x, y, getX(scale), getY(scale), stringToColor(str));
+		MLV_draw_filled_ellipse(x, y, getX(*scale), getY(*scale), stringToColor(str));
 	}
 	if (getDrawType(o)==DRAW_TEXT) {
 		MLV_draw_text(x, y, str, MLV_COLOR_RED);
 	}
 }
 
-void debugObject(Scene* s, Object* o, int camEnable) {
+void debugObject(Scene* s, Object* o, int camEnable, double time) {
 	Vector* v = getPos(o);
 	int x=0; int y=0;
 	if (camEnable) {
-		x+=getXInt(getSize(s))/2;
-		y+=getYInt(getSize(s))/2;
+		x+=getXInt(*getSize(s))/2;
+		y+=getYInt(*getSize(s))/2;
 		Object* cam=getCamera(s);
 		if (cam!=NULL) {
-			x-=getXInt(getPos(cam));
-			y-=getYInt(getPos(cam));
+			x-=getXInt(*getPos(cam));
+			y-=getYInt(*getPos(cam));
 		}
 	}
-	x+=getXInt(v);
-	y+=getYInt(v);
+	x+=getXInt(*v);
+	y+=getYInt(*v);
 	MLV_draw_line(x-15, y, x+15, y, MLV_COLOR_RED);
 	MLV_draw_line(x, y-15, x, y+15, MLV_COLOR_RED);
 	if (getHitboxType(o)==HITBOX_RECT) {
 		Vector* hit=getHitbox(o);
-		int i=getXInt(hit);
-		int j=getYInt(hit);
+		int i=getXInt(*hit);
+		int j=getYInt(*hit);
 		MLV_draw_rectangle(x-i/2, y-j/2, i, j, MLV_COLOR_RED);
 	}
 }
 
-void renderScene(Scene* s) {
-	void drO(Object* o) {return drawObject(s, o, 1);};
-	void drOp(Object* o) {return drawObject(s, o, 0);};
+void renderScene(Scene* s, double time) {
+	void drO(Object* o) {return drawObject(s, o, 1, time);};
+	void drOp(Object* o) {return drawObject(s, o, 0, time);};
 	MLV_clear_window( MLV_COLOR_BLACK );
 	int i;
 	for(i=0; i<NBR_LAYER-1; i++) eachObjectLayer(s, i, drO);
@@ -151,11 +142,11 @@ void renderScene(Scene* s) {
 	MLV_update_window();
 }
 
-void debugScene(Scene* s) {
-	void drO(Object* o) {return drawObject(s, o, 1);};
-	void deO(Object* o) {return debugObject(s, o, 1);};
-	void drOp(Object* o) {return drawObject(s, o, 0);};
-	void deOp(Object* o) {return debugObject(s, o, 0);};
+void debugScene(Scene* s, double time) {
+	void drO(Object* o) {return drawObject(s, o, 1, time);};
+	void deO(Object* o) {return debugObject(s, o, 1, time);};
+	void drOp(Object* o) {return drawObject(s, o, 0, time);};
+	void deOp(Object* o) {return debugObject(s, o, 0, time);};
 	MLV_clear_window( MLV_COLOR_BLACK );
 	int i;
 	for(i=0; i<NBR_LAYER-1; i++) eachObjectLayer(s, i, drO);
