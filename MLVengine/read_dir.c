@@ -7,6 +7,7 @@ RenderElem* readDir(char* dir) {
 	strcpy(img->str, dir);
 	
 	char str[128] = {0};
+	char c[128] = {0};
 	strcpy(str, dir);
 	strcat(str, "/descriptor.data");
 	FILE* file = fopen(str, "r");
@@ -19,11 +20,27 @@ RenderElem* readDir(char* dir) {
 		fprintf(stdout, "error\n");
 		return NULL;
 	}
-	img->nbrImg=i;
-	img->elem=(MLV_Image**)malloc(sizeof(MLV_Image*)*i);
-	int j;
-	char c[128] = {0};
-	for (j=0; j<i; j++) {
+	if (i>=0) {
+		img->nbrImg=i;
+		img->elem=(MLV_Image**)malloc(sizeof(MLV_Image*)*i);
+		int j;
+		for (j=0; j<i; j++) {
+			if (fscanf(file, "%s\n", c)==EOF) {
+				fprintf(stdout, "error\n");
+				return NULL;
+			}
+			strcpy(str, dir);
+			strcat(str, "/");
+			strcat(str, c);
+			img->elem[j]=MLV_load_image(str);
+		}
+	} else {
+		int x, y;
+		if (fscanf(file, "%d %d\n", &x, &y)==EOF) {
+			fprintf(stdout, "error\n");
+			return NULL;
+		}
+		img->nbrImg=i;
 		if (fscanf(file, "%s\n", c)==EOF) {
 			fprintf(stdout, "error\n");
 			return NULL;
@@ -31,7 +48,20 @@ RenderElem* readDir(char* dir) {
 		strcpy(str, dir);
 		strcat(str, "/");
 		strcat(str, c);
-		img->elem[j]=MLV_load_image(str);
+		img->elem=(MLV_Image**)malloc(sizeof(MLV_Image*)*x*y);
+		img->nbrImg=x*y;
+		MLV_Image* image = MLV_load_image(str);
+		int ii, jj, width, height;
+		MLV_get_image_size(image, &width, &height);
+		width=width/x;
+		height=height/y;
+		for (jj=0; jj<y; jj++) {
+			for (ii=0; ii<x; ii++) {
+				img->elem[ii+jj*y] = MLV_copy_partial_image(image, width*ii, height*jj, width, height);
+			}
+		}
+		MLV_free_image(image);
+		
 	}
 	fclose(file);
 	if (img->nbrImg != 0) {
@@ -47,9 +77,7 @@ RenderElem* readDir(char* dir) {
 	return img;
 }
 
-MLV_Image* getImageRender(RenderElem* img, double time) {
-	MLV_Image* i = img->elem[(int)((img->time/img->timeMax)*img->nbrImg)%img->nbrImg];
-	img->time+=time;
-	img->time = fmod(img->time, img->timeMax);
+MLV_Image* getImageRender(RenderElem* img, int time) {
+	MLV_Image* i = img->elem[(int)(time/img->timeMax)%img->nbrImg];
 	return i;
 }

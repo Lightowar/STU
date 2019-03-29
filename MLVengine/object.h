@@ -39,6 +39,8 @@ void* getImage(Object* o);
 void setImage(Object* o, void* i);
 void* getCarac(Object* o);
 void setCarac(Object* o, void* c);
+int getFrameForAnim(Object* o);
+void setFrameForAnim(Object* o, int f);
 
 void applyVit(Object* o);
 int liveAndDie(Object* o);

@@ -76,7 +76,7 @@ MLV_Color stringToColor(char* str) {
 	return MLV_COLOR_BLACK;
 }
 
-void drawObject(Scene* s, Object* o, int camEnable, double time) {
+void drawObject(Scene* s, Object* o, int camEnable, int time) {
 	Vector* v = getPos(o);
 	int x=0; int y=0;
 	if (camEnable) {
@@ -133,8 +133,8 @@ void debugObject(Scene* s, Object* o, int camEnable, double time) {
 }
 
 void renderScene(Scene* s, double time) {
-	void drO(Object* o) {return drawObject(s, o, 1, time);};
-	void drOp(Object* o) {return drawObject(s, o, 0, time);};
+	void drO(Object* o) {return drawObject(s, o, 1, getFrameForAnim(o));};
+	void drOp(Object* o) {return drawObject(s, o, 0, getFrameForAnim(o));};
 	MLV_clear_window( MLV_COLOR_BLACK );
 	int i;
 	for(i=0; i<NBR_LAYER-1; i++) eachObjectLayer(s, i, drO);
@@ -143,10 +143,10 @@ void renderScene(Scene* s, double time) {
 }
 
 void debugScene(Scene* s, double time) {
-	void drO(Object* o) {return drawObject(s, o, 1, time);};
-	void deO(Object* o) {return debugObject(s, o, 1, time);};
-	void drOp(Object* o) {return drawObject(s, o, 0, time);};
-	void deOp(Object* o) {return debugObject(s, o, 0, time);};
+	void drO(Object* o) {return drawObject(s, o, 1, getFrameForAnim(o));};
+	void deO(Object* o) {return debugObject(s, o, 1, getFrameForAnim(o));};
+	void drOp(Object* o) {return drawObject(s, o, 0, getFrameForAnim(o));};
+	void deOp(Object* o) {return debugObject(s, o, 0, getFrameForAnim(o));};
 	MLV_clear_window( MLV_COLOR_BLACK );
 	int i;
 	for(i=0; i<NBR_LAYER-1; i++) eachObjectLayer(s, i, drO);

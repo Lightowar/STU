@@ -6,7 +6,7 @@ void randomiseStar(Object* o) {
 	if (rand<=1) {
 		setY(pos, MLV_get_random_double(MIN_Y, MAX_Y));
 		setX(pos, MIN_X);
-		setX(vit, MLV_get_random_double(3, 10)*60/FPS);
+		setX(vit, MLV_get_random_double(5, 20)*60/FPS);
 		setY(vit, MLV_get_random_double(0.1, 1.5)*60/FPS);
 		setX(scale, MLV_get_random_double(1, 3));
 		setY(scale, MLV_get_random_double(1, 3));
@@ -16,7 +16,7 @@ void randomiseStar(Object* o) {
 		setX(pos, MLV_get_random_double(MIN_X, MAX_X));
 		setY(pos, MIN_Y);
 		setX(vit, 0);
-		setY(vit, MLV_get_random_double(0.1, 1.5)*60/FPS);
+		setY(vit, MLV_get_random_double(0.3, 2)*60/FPS);
 		setX(scale, MLV_get_random_double(1, 3));
 		setY(scale, MLV_get_random_double(1, 3));
 		setDrawType(o, DRAW_OVAL);

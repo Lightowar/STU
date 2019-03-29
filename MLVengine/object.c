@@ -17,6 +17,7 @@ struct object {
 	char* drawString;
 	void* image;
 	void* carac;
+    int frameForAnim;
 };
 
 Object* getObject(Object* o) {
@@ -48,6 +49,7 @@ Object* newObject() {
 	if (objMap==NULL) {
 		objMap=newHashset();
 	}
+    o->frameForAnim=0;
 	addInHashset(objMap, o);
 	return o;
 }
@@ -103,6 +105,7 @@ char* getDrawString(Object* o) {
 }
 void setDrawString(Object* o, char* string) {
 	o->drawString = string;
+    o->frameForAnim=0;
 }
 HITBOX_TYPE getHitboxType(Object* o) {
 	return o->hitboxType;
@@ -128,6 +131,12 @@ void* getCarac(Object* o) {
 void setCarac(Object* o, void* c) {
 	o->carac = c;
 }
+int getFrameForAnim(Object* o) {
+	return o->frameForAnim;
+}
+void setFrameForAnim(Object* o, int f) {
+	o->frameForAnim = f;
+}
 
 void applyVit(Object* o) {
 	addVector(&(o->pos), o->vit);
@@ -141,6 +150,7 @@ int liveAndDie(Object* o) {
 		return 1;
 	}
 	setKillTime(o, i-1);
+    o->frameForAnim++;
 	return 0;	
 }
 

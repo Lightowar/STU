@@ -8,12 +8,12 @@
 #include <time.h>
 #include <math.h>
 
-#define MIN_X -300
-#define MAX_X 300
-#define MIN_Y -300
-#define MAX_Y 300
-#define SIZE_X 500
-#define SIZE_Y 500
+#define SIZE_X 1280
+#define SIZE_Y 720
+#define MIN_X -650
+#define MAX_X 650
+#define MIN_Y -370
+#define MAX_Y 370
 
 #define FPS 60
 
@@ -72,6 +72,7 @@ int main (int argc, char* argv[]) {
 	addObject(s, o, 1);
 	addToSet(enemy, o);
 	
+    
 	o=createEnemy();
 	((Carac*)getCarac(o))->move=2;
 	addObject(s, o, 2);
@@ -91,8 +92,7 @@ int main (int argc, char* argv[]) {
 		moveObj((Object*)(o));
 	}
 	
-	while (MLV_get_keyboard_state(MLV_KEYBOARD_q)!=MLV_PRESSED) {
-		
+	while (MLV_get_keyboard_state(MLV_KEYBOARD_q)!=MLV_PRESSED) {		
 
 		if (MLV_get_keyboard_state(MLV_KEYBOARD_a)==MLV_PRESSED && time<=0) {
 			addToSet(allyM, createMissile(s, getX(*pos)-5, getY(*pos), getX(*vit), getY(*vit)));
@@ -113,8 +113,11 @@ int main (int argc, char* argv[]) {
 			void col(void** e) {
 				if (getObject(*e)==NULL || getObject(*m)==NULL) return;
 				if (touch((*m), (*e))) {
+                    setDrawString((Object*)(*e), "DATA/explosion");
 					destroyObject((Object*)(*m), 1);
-					destroyObject((Object*)(*e), 1);
+                    setKillTime((Object*)(*e), 80);
+                    removeFromSet(enemy, (Object*)(*e));
+                    
 				}
 			}
 		
