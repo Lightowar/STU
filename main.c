@@ -20,6 +20,7 @@
 #include "carac.c"
 #include "other.c"
 #include "create.c"
+#include "ship_creator.c"
 
 int main (int argc, char* argv[]) {
 	
@@ -42,6 +43,8 @@ int main (int argc, char* argv[]) {
 	
 	int time=0;
 	int totalFrame=0;
+	
+	readFile("DATA/ss_descriptor.data");
 	
 	Set* stars=newSet();
 	int i;
@@ -67,23 +70,22 @@ int main (int argc, char* argv[]) {
 	Vector* vit;
 	Vector* pos;
 	
-	o=createEnemy();
+	o=createSpaceShipe(1);
 	((Carac*)getCarac(o))->move=1;
 	addObject(s, o, 1);
 	addToSet(enemy, o);
 	
     
-	o=createEnemy();
+	o=createSpaceShipe(1);
 	((Carac*)getCarac(o))->move=2;
 	addObject(s, o, 2);
 	addToSet(enemy, o);
 	
-	Object* player = createEnemy();
+	Object* player = o=createSpaceShipe(0);
 	((Carac*)getCarac(player))->move=3;
 	vit=getVit(player);
 	pos=getPos(player);
 	addObject(s, player, 1);
-	setDrawString(player, "DATA/ss_player");
 	
 	Object* cam=newObject();
 	setCamera(s, cam);

@@ -15,7 +15,7 @@ Object* createMissile (Scene* s, float x, float y, float vitX, float vitY) {
 	return m;
 }
 
-Object* createEnemy () {
+/*Object* createEnemy () {
 	Object* o = newObject();
 	setDrawType(o, DRAW_IMAGE);
 	setDrawString(o, "DATA/ss_enemy");
@@ -23,6 +23,7 @@ Object* createEnemy () {
 	Vector* hit=getHitbox(o);
 	setX(hit, 40);
 	setY(hit, 25);
-	setCarac(o, newCarac(0, 0, 0, NULL));
+	setCarac(o, newCarac(0, 0, 0, 0, NULL));
 	return o;
 }
+*/

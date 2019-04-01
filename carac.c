@@ -5,13 +5,14 @@
 
 typedef struct carac {
 	int lifePoint;
+	int maxLifePoint;
 	int group;
 	int move;
 	Object* target;
 	int moveTime;
 } Carac;
 
-Carac* newCarac(int lifePoint, int group, int move, Object* target) {
+Carac* newCarac(int lifePoint, int maxLifePoint, int group, int move, Object* target) {
 	Carac* c=(Carac*)malloc(sizeof(Carac));
 	c->lifePoint=lifePoint;
 	c->group=group;
