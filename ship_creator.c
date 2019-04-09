@@ -18,6 +18,7 @@ void readFile(char* file) {
 		&descriptor[i].pv, descriptor[i].img, 
 		&descriptor[i].moveSet, &descriptor[i].missile, &x, &y) != EOF) 
 	{
+        descriptor[i].hitbox = newVector(x, y);
 		i++;
 	}
 	fclose (f);

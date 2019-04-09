@@ -13,40 +13,52 @@ typedef struct renderElem RenderElem;
 struct renderElem {
 	MLV_Image** elem;
 	int nbrImg;
-	char str[128];
+	char str[255];
 	int decX;
 	int decY;
-	double time;
 	double timeMax;
+    int size;
+    MLV_Font* font;
 };
 
 #include "read_dir.c"
 
 Hashset* renderMap=NULL;
+Hashset* fontMap=NULL;
 
-int hashStr(char* str) {
-	if (str[0]==0) {
+unsigned int hashStr(char* str) {
+	if (str[0]=='\0') {
 		return 0;
-	}			
-	int h = str[0]+hashStr(str+1);
-	if (h>=HASHSET_SIZE) {
-		h-=HASHSET_SIZE;
 	}
+	int h = str[0]+hashStr(str+1)*31;
 	return h;
 }
-int hashElem(void* elem) {
-	char* str = (char*)((RenderElem*)elem)->str;
-	return hashStr(str);
+unsigned int hashElem(void* elem) {
+	RenderElem* e = (RenderElem*)elem;
+	char* str = (char*)e->str;
+	unsigned int h = (hashStr(str)+e->size)%HASHSET_SIZE;
+	return h;
 }
 int equElem(void* elem1, void* elem2) {
 	if (elem1==NULL || elem2==NULL) return (elem1==NULL && elem2==NULL);
-	return (strcmp(((RenderElem*)elem1)->str, ((RenderElem*)elem2)->str)==0);
+	/*printf("%d\n%d\n\n", ((RenderElem*)elem1)->size, ((RenderElem*)elem1)->size);*/
+	return (strcmp(((RenderElem*)elem1)->str, ((RenderElem*)elem2)->str)==0 && 
+		((RenderElem*)elem1)->size == ((RenderElem*)elem2)->size);
 }
 
 RenderElem* getImageFromIndex(char* str) {
-	RenderElem r = {NULL, 0, {0}, 1, 1, 0, 0};
+	RenderElem r;
+	initElem(&r);
 	strcpy(r.str, str);
 	return getFromHashset(renderMap, &r);
+}
+
+RenderElem* getFontFromIndex(char* str, int size) {
+	RenderElem r;
+	initElem(&r);
+	r.size = size;
+	strcpy(r.str, str);
+	return getFromHashset(fontMap, &r);
 }
 
 void renderInit(Scene* s) {
@@ -54,6 +66,9 @@ void renderInit(Scene* s) {
 	if (renderMap == NULL) renderMap=newHashset();
 	setHashHashset(renderMap, hashElem);
 	setEqualHashset(renderMap, equElem);
+	if (fontMap == NULL) fontMap=newHashset();
+	setHashHashset(fontMap, hashElem);
+	setEqualHashset(fontMap, equElem);
 }
 
 void renderEnd() {
@@ -104,7 +119,17 @@ void drawObject(Scene* s, Object* o, int camEnable, int time) {
 		MLV_draw_filled_ellipse(x, y, getX(*scale), getY(*scale), stringToColor(str));
 	}
 	if (getDrawType(o)==DRAW_TEXT) {
-		MLV_draw_text(x, y, str, MLV_COLOR_RED);
+		int size = getYInt(*getDrawScale(o));
+		RenderElem* font = getFontFromIndex(str, size);
+        if (font==NULL) {
+			font=(RenderElem*)malloc(sizeof(RenderElem));
+			initElem(font);
+            strcpy(font->str, str);
+            font->font = MLV_load_font(str, size);
+            font->size = size;
+			addInHashset(fontMap, font);
+        }
+		MLV_draw_text_with_font(x, y, getDrawText(o), font->font, MLV_COLOR_RED);
 	}
 }
 

@@ -31,6 +31,8 @@ Vector* getDrawScale(Object* o);
 void setDrawScale(Object* o, Vector scale);
 char* getDrawString(Object* o);
 void setDrawString(Object* o, char* string);
+char* getDrawText(Object* o);
+void setDrawText(Object* o, char* string);
 HITBOX_TYPE getHitboxType(Object* o);
 void setHitboxType(Object* o, HITBOX_TYPE type);
 Vector* getHitbox(Object* o);

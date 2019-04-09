@@ -1,9 +1,21 @@
 #include <stdio.h>
 #include <math.h>
 
+void initElem(RenderElem* e) {
+	e->elem = NULL;
+	e->nbrImg = 0;
+	e->str[0] = '\0';
+	e->decX = 0;
+	e->decY = 0;
+	e->timeMax=0;
+	e->size = 1;
+	e->font = NULL;
+}
+
 RenderElem* readDir(char* dir) {
 	
 	RenderElem* img=(RenderElem*)malloc(sizeof(RenderElem));
+	initElem(img);
 	strcpy(img->str, dir);
 	
 	char str[128] = {0};
@@ -73,7 +85,6 @@ RenderElem* readDir(char* dir) {
 	}
 	img->decX/=2;
 	img->decY/=2;
-	img->time=0;
 	return img;
 }
 

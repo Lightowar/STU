@@ -7,7 +7,7 @@
 
 struct hashset {
 	Set* map[HASHSET_SIZE];
-	int (*hash)(void*);
+	unsigned int (*hash)(void*);
 	int (*equ)(void*, void*);
 };
 
@@ -30,7 +30,7 @@ int equal(Hashset* map, void* elem1, void* elem2) {
 	if (map->equ==NULL) return elem1==elem2;
 	return map->equ(elem1, elem2);
 }
-int hash(Hashset* map, void* elem) {
+unsigned int hash(Hashset* map, void* elem) {
 	if (map->hash==NULL) return ((intptr_t)elem)%HASHSET_SIZE;
 	return map->hash(elem)%HASHSET_SIZE;
 }
@@ -50,7 +50,7 @@ int removeFromHashset(Hashset* map, void* key) {
 	return removeFromSet(map->map[h], key);
 }
 
-void setHashHashset(Hashset* map, int (*hash)(void*)) {
+void setHashHashset(Hashset* map, unsigned int (*hash)(void*)) {
 	map->hash = hash;
 }
 

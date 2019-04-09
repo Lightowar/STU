@@ -15,6 +15,7 @@ struct object {
 	HITBOX_TYPE hitboxType;
 	Vector hitbox;
 	char* drawString;
+	char* drawText;
 	void* image;
 	void* carac;
     int frameForAnim;
@@ -105,7 +106,13 @@ char* getDrawString(Object* o) {
 }
 void setDrawString(Object* o, char* string) {
 	o->drawString = string;
-    o->frameForAnim=0;
+    o->frameForAnim=1;
+}
+char* getDrawText(Object* o) {
+	return o->drawText;
+}
+void setDrawText(Object* o, char* string) {
+	o->drawText = string;
 }
 HITBOX_TYPE getHitboxType(Object* o) {
 	return o->hitboxType;
