@@ -50,16 +50,16 @@ void* isInSet(Set* s, void* o) {
 }
 
 int addToSet(Set* s, void* o) {
-	Maillon* m;
-	for (m=s->chaine; m!=NULL; m=m->next) {
-		if (m->elem==o || (s->equ!=NULL && s->equ(m->elem, o))) {
+	Maillon** m;
+	for (m=&(s->chaine); (*m)!=NULL; m=&(*m)->next) {
+		if ((*m)->elem==o || (s->equ!=NULL && s->equ((*m)->elem, o))) {
 			return 0;
 		}
 	}
 	Maillon* m2=(Maillon*)malloc(sizeof(Maillon));
-	m2->next=s->chaine;
+	m2->next=NULL;
 	m2->elem=o;
-	s->chaine=m2;
+	(*m)=m2;
 	return 1;
 }
 
@@ -77,6 +77,17 @@ int removeFromSet(Set* s, void* o) {
 			return 1;
 		}
 		prec=m;
+	}
+	return 0;
+}
+
+int almostRemoveFromSet(Set* s, void* o) {
+	Maillon* m;
+	for (m=s->chaine; m!=NULL; m=m->next) {
+		if (m->elem==o || (s->equ!=NULL && s->equ(m->elem, o))) {
+			m->elem=NULL;
+			return 1;
+		}
 	}
 	return 0;
 }

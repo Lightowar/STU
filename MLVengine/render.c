@@ -7,6 +7,7 @@
 #include "vector.h"
 #include "hashset.h"
 
+#define MAX_TEXT_SIZE 4096
 
 typedef struct renderElem RenderElem;
 
@@ -41,7 +42,6 @@ unsigned int hashElem(void* elem) {
 }
 int equElem(void* elem1, void* elem2) {
 	if (elem1==NULL || elem2==NULL) return (elem1==NULL && elem2==NULL);
-	/*printf("%d\n%d\n\n", ((RenderElem*)elem1)->size, ((RenderElem*)elem1)->size);*/
 	return (strcmp(((RenderElem*)elem1)->str, ((RenderElem*)elem2)->str)==0 && 
 		((RenderElem*)elem1)->size == ((RenderElem*)elem2)->size);
 }
@@ -75,7 +75,7 @@ void renderEnd() {
 	void freeImg(void** img) {
 		int i;
 		for (i=0; i<(*(RenderElem**)img)->nbrImg; i++) {
-			MLV_free_image(((RenderElem*)(*img))->elem[i]);
+			MLV_free_image(((RenderElem*)(*img))->elem[i]);	
 		}
 		free((RenderElem*)(*img));
 	}
@@ -83,12 +83,69 @@ void renderEnd() {
 	//destroyHashset(renderMap);
 	return;
 }
+MLV_Color getOjectColor(Object* o) {
+	ObjColor c = getColor(o);
+	return MLV_rgba(c.r, c.g, c.b, c.a);
+}
 
-MLV_Color stringToColor(char* str) {
-	if (strcmp(str, "red")==0) {return MLV_COLOR_RED;}
-	if (strcmp(str, "white")==0) {return MLV_COLOR_WHITE;}
-	if (strcmp(str, "starColor")==0) {return MLV_rgba(255, 255, 200, 200);}
-	return MLV_COLOR_BLACK;
+void drawTextSimple(int x, int y, char line[], MLV_Font* font, MLV_Color color) {
+	if (font==NULL)
+		MLV_draw_text(x, y, line, color);
+	else
+		MLV_draw_text_with_font(x, y, line, font, color);
+}
+
+void drawText (Object* o, MLV_Font* font) {
+	MLV_Color c = getOjectColor(o);
+	int x = getX(*getPos(o));
+	int y = getY(*getPos(o));
+	int sizeY = getY(*getDrawScale(o));
+	char line[MAX_TEXT_SIZE] = "";
+	char* str = getDrawText(o);
+	int pos = 0;
+	int posLine=0;
+	int prec=0;
+	int max = getX(*getTextBox(o));
+	while (str[pos]!='\0') {
+		if (str[pos]==' ') {
+			prec=posLine;
+		}
+		line[posLine]=str[pos];
+		line[posLine+1]='\0';
+		posLine++;
+		pos++;
+		if (str[pos]=='\n') {
+			drawTextSimple(x, y, line, font, c);
+			y+=sizeY;
+			prec=0;
+			posLine=0;
+			line[0]='\0';
+			pos++;
+		} else {
+			if (max>0) {
+				int sizeX, tmp;
+				if (font==NULL) {
+					MLV_get_size_of_text(line, &sizeX, &tmp);
+				} else {
+					MLV_get_size_of_text_with_font(line, &sizeX, &tmp, font);
+				}
+				if (sizeX>=max) {
+					line[prec]='\0';
+					pos-=(posLine-prec);
+					pos++;
+					drawTextSimple(x, y, line, font, c);
+					y+=sizeY;
+					prec=0;
+					posLine=0;
+					line[0]='\0';
+				}
+			}
+		}
+		if (str[pos]=='\0') {
+			line[posLine]='\0';		
+			drawTextSimple(x, y, line, font, c);
+		}
+	}
 }
 
 void drawObject(Scene* s, Object* o, int camEnable, int time) {
@@ -106,30 +163,43 @@ void drawObject(Scene* s, Object* o, int camEnable, int time) {
 	x+=getXInt(*v);
 	y+=getYInt(*v);
 	char* str = getDrawString(o);
-	if (str!=NULL && getDrawType(o)==DRAW_IMAGE) {
-		RenderElem* img = getImageFromIndex(str);
+	if (str!=NULL && str[0]!='\0' && getDrawType(o)==DRAW_IMAGE) {
+		RenderElem* img = getRender(o);
 		if (img==NULL) {
-			img=readDir(str);
-			addInHashset(renderMap, img);
+			img = getImageFromIndex(str);
+			if (img==NULL) {
+				img=readDir(str);
+				addInHashset(renderMap, img);
+			}
+			setRender(o, img);
 		}
 		MLV_draw_image(getImageRender(img, time), x-img->decX, y-img->decY);
 	}
 	if (getDrawType(o)==DRAW_OVAL) {
 		Vector* scale=getDrawScale(o);
-		MLV_draw_filled_ellipse(x, y, getX(*scale), getY(*scale), stringToColor(str));
+		MLV_draw_filled_ellipse(x, y, getX(*scale), getY(*scale), getOjectColor(o));
+	}
+	if (getDrawType(o)==DRAW_RECT) {
+		Vector* scale=getDrawScale(o);
+		MLV_draw_filled_rectangle(x, y, getX(*scale), getY(*scale), getOjectColor(o));
 	}
 	if (getDrawType(o)==DRAW_TEXT) {
 		int size = getYInt(*getDrawScale(o));
-		RenderElem* font = getFontFromIndex(str, size);
-        if (font==NULL) {
-			font=(RenderElem*)malloc(sizeof(RenderElem));
-			initElem(font);
-            strcpy(font->str, str);
-            font->font = MLV_load_font(str, size);
-            font->size = size;
-			addInHashset(fontMap, font);
-        }
-		MLV_draw_text_with_font(x, y, getDrawText(o), font->font, MLV_COLOR_RED);
+		RenderElem* font = getRender(o);
+		if (font==NULL) {
+			font = getFontFromIndex(str, size);
+			if (font==NULL) {
+				font=(RenderElem*)malloc(sizeof(RenderElem));
+				initElem(font);
+				strcpy(font->str, str);
+				if (strcmp(font->str, "")==0) font->font = NULL;
+				else font->font = MLV_load_font(str, size);
+				font->size = size;
+				addInHashset(fontMap, font);
+			}
+			setRender(o, font);
+		}
+		drawText(o, font->font);
 	}
 }
 

@@ -1,6 +1,8 @@
 #include "vector.h"
 
 #include <stdio.h>
+#include <math.h>
+
 
 Vector initVector () {
 	Vector v = {0, 0};
@@ -55,7 +57,20 @@ void printVector(Vector v) {
 	printf("%d, %d\n", getXInt(v), getYInt(v));
 }
 
-void addVector(Vector* v1, Vector v2) {
-	v1->x+=v2.x;
-	v1->y+=v2.y;
+Vector addVector(Vector v1, Vector v2) {
+	return newVector(v1.x+v2.x, v1.y+v2.y);
+}
+
+float norme(Vector v) {
+	return sqrt(v.x*v.x+v.y*v.y);
+}
+
+Vector multiplie(Vector v, float f) {
+	v.x*=f;
+	v.y*=f;
+	return v;
+}
+
+Vector normalize(Vector v) {
+	return multiplie(v, 1/norme(v));
 }

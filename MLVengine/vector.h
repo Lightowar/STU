@@ -17,6 +17,9 @@ void setY (Vector* v, float y);
 int getXInt (Vector v);
 int getYInt (Vector v);
 void printVector(Vector v);
-void addVector(Vector* v1, Vector v2);
+Vector addVector(Vector v1, Vector v2);
+float norme(Vector v);
+Vector multiplie(Vector v, float f);
+Vector normalize (Vector v);
 
 #endif

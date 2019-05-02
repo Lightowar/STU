@@ -12,6 +12,7 @@ struct object {
 	int killTime;
 	DRAW_TYPE drawType;
 	Vector drawScale;
+	Vector textBox;
 	HITBOX_TYPE hitboxType;
 	Vector hitbox;
 	char* drawString;
@@ -19,6 +20,8 @@ struct object {
 	void* image;
 	void* carac;
     int frameForAnim;
+    void* render;
+    ObjColor color;
 };
 
 Object* getObject(Object* o) {
@@ -26,7 +29,6 @@ Object* getObject(Object* o) {
 	if (objMap==NULL) objMap=newHashset();
 	return getFromHashset(objMap, o);
 }
-
 
 Object* initObject() {
 	Object* o = malloc(sizeof(Object));
@@ -43,27 +45,28 @@ Object* newObject() {
 	o->killTime=-1;
 	o->drawType=DRAW_NONE;
 	o->drawScale=newVector(1, 1);
+	o->textBox=newVector(-1, -1);
 	o->hitboxType=HITBOX_NONE;
 	o->hitbox=newVector(0, 0);
 	o->image=NULL;
 	o->carac=NULL;
+    o->frameForAnim=0;
+    o->render=NULL;
+    o->color.r=0;
+    o->color.g=0;
+    o->color.b=0;
+    o->color.a=0;
+    o->drawString=NULL;
+    o->drawText=NULL;
 	if (objMap==NULL) {
 		objMap=newHashset();
 	}
-    o->frameForAnim=0;
 	addInHashset(objMap, o);
 	return o;
 }
 void destroyObject(Object* o, int hard) {
+	if (getObject(o)==NULL) return NULL;
 	if (hard) {
-		Vector pos=o->pos;
-		Vector vit=o->vit;
-		Vector hit=o->hitbox;
-		Vector dra=o->drawScale;
-		destroyVector(&pos);
-		destroyVector(&vit);
-		destroyVector(&hit);
-		destroyVector(&dra);
 		free((o)->carac);
 	}
 	if (objMap==NULL) objMap=newHashset();
@@ -94,19 +97,29 @@ DRAW_TYPE getDrawType(Object* o) {
 }
 void setDrawType(Object* o, DRAW_TYPE type) {
 	o->drawType = type;
+    o->render=NULL;
 }
 Vector* getDrawScale(Object* o) {
 	return &(o->drawScale);
 }
 void setDrawScale(Object* o, Vector v) {
 	o->drawScale = v;
+    o->render=NULL;
+}
+Vector* getTextBox(Object* o) {
+	return &(o->textBox);
+}
+void setTextBox(Object* o, Vector v) {
+	o->textBox = v;
+    o->render=NULL;
 }
 char* getDrawString(Object* o) {
 	return o->drawString;
 }
 void setDrawString(Object* o, char* string) {
 	o->drawString = string;
-    o->frameForAnim=1;
+    o->frameForAnim=0;
+    o->render=NULL;
 }
 char* getDrawText(Object* o) {
 	return o->drawText;
@@ -126,12 +139,6 @@ Vector* getHitbox(Object* o) {
 void setHitbox(Object* o, Vector v) {
 	o->hitbox = v;
 }
-void* getImage(Object* o) {
-	return o->image;
-}
-void setImage(Object* o, void* i) {
-	o->image = i;
-}
 void* getCarac(Object* o) {
 	return o->carac;
 }
@@ -146,7 +153,7 @@ void setFrameForAnim(Object* o, int f) {
 }
 
 void applyVit(Object* o) {
-	addVector(&(o->pos), o->vit);
+	o->pos=addVector(o->pos, o->vit);
 }
 
 int liveAndDie(Object* o) {
@@ -159,6 +166,20 @@ int liveAndDie(Object* o) {
 	setKillTime(o, i-1);
     o->frameForAnim++;
 	return 0;	
+}
+
+void* getRender(Object* o) {
+	return o->render;
+}
+void setRender(Object* o, void* render) {
+	o->render=render;
+}
+
+ObjColor getColor(Object* o) {
+	return o->color;
+}
+void setColor(Object* o, ObjColor color) {
+	o->color=color;
 }
 
 int touch(Object* o1, Object* o2) {
