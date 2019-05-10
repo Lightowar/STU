@@ -2,6 +2,7 @@
 #include "MLVengine/scene.h"
 #include "MLVengine/object.h"
 #include "MLVengine/render.h"
+#include "MLVengine/input.h"
 
 #include <stdio.h>
 #include <MLV/MLV_all.h>
@@ -26,7 +27,9 @@ Set* allyM;
 Object* player;
 Scene* s;
 
-Object* createMissile (Object* o, Vector vit, Vector dec);
+int mouse=1;
+
+Object* createMissile (Object* o, Vector vit, Vector dec, int id, int global);
 #include "carac.c"
 #include "ship_creator.c"	
 #include "create.c"
@@ -128,8 +131,8 @@ int main (int argc, char* argv[]) {
 	setDrawType(textBox, DRAW_TEXT);
 	setDrawString(textBox, "DATA/BebasNeue-Regular.ttf");
 	setDrawScale(textBox, newVector(20, 20));
-	setPos(textBox, newVector(SIZE_X-UI_SIZE, SIZE_Y/2));
-	setTextBox(textBox, newVector(UI_SIZE ,SIZE_Y));
+	setPos(textBox, newVector(SIZE_X-UI_SIZE+10, SIZE_Y/2));
+	setTextBox(textBox, newVector(UI_SIZE-20 ,SIZE_Y));
 	addObject(s, textBox, 3);
 	setDrawText(textBox, partialText);
 	setColor(textBox, (ObjColor){255, 0, 0, 255});
@@ -164,156 +167,179 @@ int main (int argc, char* argv[]) {
 	Object* objToWait=NULL;
 	int textToWait=0;
 	
-	while (MLV_get_keyboard_state(MLV_KEYBOARD_q)!=MLV_PRESSED) {
-		while (wait==0 && textToWait==0 && getObject(objToWait)==NULL) {
-			if (readLine(&type, &object, &wait, &prec)<=0) break;
-			Object* o;
-			switch (type) {
-				case 1:
-					o = (Object*)object;
-					addObject(s, o, 1);
-					addToSet(enemy, o);
-					((Carac*)getCarac(o))->init=*getPos(o);
-					if (prec==1) objToWait=o;
-					else objToWait=NULL;
-					break;
-				case 2:
-					strcpy(text, object);
-					textBoxAdvance=0;
-					sizeText=strlen(text);
-					if (prec==1) textToWait=1;
-					else textToWait=0;
-					break;
-				case 3:
-					strcpy(faceString, object);
-					setDrawString(face, faceString);
-					break;
-				default:
-					break;
-			}
-		}
-		if (wait > 0) wait--;
-		
-		if (textBoxAdvance<sizeText) {
-			partialText[textBoxAdvance]=text[textBoxAdvance];
-			partialText[textBoxAdvance+1]='\0';
-		}
-		
-		if (textBoxAdvance<(sizeText*2)) {
-			textBoxAdvance++;
+	int paused=0;
+	int pausedPressed=0;
+	
+	while (!isPressed("q")) {
+		if (isPressed("ESCAPE") && pausedPressed==0) {
+			paused=!paused;
+			pausedPressed=3;
 		} else {
-			partialText[0]='\0';
-			textBoxAdvance=0;
-			sizeText=0;
-			textToWait=0;
+			if (pausedPressed>0 && !isPressed("ESCAPE")) pausedPressed--;
 		}
-		
-		if (MLV_get_keyboard_state(MLV_KEYBOARD_RETURN)==MLV_RELEASED) {
-			enterPressed=0;
-		} else {		
-			if (MLV_get_keyboard_state(MLV_KEYBOARD_RETURN)==MLV_PRESSED && textBoxAdvance<(sizeText*2) && !enterPressed) {
-				enterPressed=1;
-				if (textBoxAdvance<sizeText) {
-					textBoxAdvance=sizeText;
-					strcpy(partialText, text);
-				} else {
-					textBoxAdvance=2*sizeText;
+		if (paused) {
+		} else {
+			while (wait==0 && textToWait==0 && getObject(objToWait)==NULL) {
+				if (readLine(&type, &object, &wait, &prec)<=0) break;
+				Object* o;
+				switch (type) {
+					case 1:
+						o = (Object*)object;
+						addObject(s, o, 1);
+						addToSet(enemy, o);
+						((Carac*)getCarac(o))->init=*getPos(o);
+						if (prec==1) objToWait=o;
+						else objToWait=NULL;
+						break;
+					case 2:
+						strcpy(text, object);
+						textBoxAdvance=0;
+						sizeText=strlen(text);
+						if (prec==1) textToWait=1;
+						else textToWait=0;
+						break;
+					case 3:
+						strcpy(faceString, object);
+						setDrawString(face, faceString);
+						break;
+					default:
+						break;
 				}
 			}
-		}
-		
-		void l1 (void** o) {moveStar((Object*)(*o));}
-		void l2 (void** o) {vitEnemy((Object*)(*o));}
-		void l3 (void** o) {fireObj((Object*)(*o));}
-		eachSet(stars, l1);
-		eachSet(enemy, l2);
-		eachSet(enemy, l3);
-		if (getObject(player)!=NULL) {
-			moveObj(player);
-			fireObj(player);
-		}
-		
-		void boundSet(Set* s) {
-			void bound(void** obj) {
-				if (getObject(*obj)==NULL) return;
-				Object* o = (Object*)(*obj);
-				Vector pos = *getPos(o);
-				if (getXInt(pos)>MAX_X || getXInt(pos)<MIN_X || getYInt(pos)>MAX_Y || getYInt(pos)<MIN_Y) {
-					destroyObject(o, 1);
-					almostRemoveFromSet(s, o);
-				}
+			if (wait > 0) wait--;
+			
+			if (textBoxAdvance<sizeText) {
+				partialText[textBoxAdvance]=text[textBoxAdvance];
+				partialText[textBoxAdvance+1]='\0';
 			}
-			eachSet(s, bound);
-		}
-		
-		boundSet(enemy);
-		boundSet(enemyM);
-		boundSet(allyM);
-		
-		void colE(void** m) {
-			void col(void** e) {
-				if (getObject(*e)==NULL || getObject(*m)==NULL) return;
-				if (touch((*m), (*e))) {
-					if (dammage(*m, *e)) {
-						destroySpaceShip((Object*)(*e));
-						almostRemoveFromSet(enemy, (Object*)(*e));
+			
+			if (textBoxAdvance<(sizeText*2)) {
+				textBoxAdvance++;
+			} else {
+				partialText[0]='\0';
+				textBoxAdvance=0;
+				sizeText=0;
+				textToWait=0;
+			}
+			/*MLV_get_keyboard_state*/
+			if (!isPressed("RETURN")) {
+				enterPressed=0;
+			} else {		
+				if (textBoxAdvance<(sizeText*2) && !enterPressed) {
+					enterPressed=1;
+					if (textBoxAdvance<sizeText) {
+						textBoxAdvance=sizeText;
+						strcpy(partialText, text);
+					} else {
+						textBoxAdvance=2*sizeText;
 					}
 				}
 			}
-			eachSet(enemy, col);
-		}
-		eachSet(allyM, colE);
-		
-		void colEM(void** m) {
-			if (getObject(player) == NULL || getObject(*m)==NULL) return;
-			if (touch((*m), player)) {
-				if (dammage(*m, player)) {
-					player=NULL;
-					destroySpaceShip(player);
+			
+			void l1 (void** o) {moveStar((Object*)(*o));}
+			void l2 (void** o) {vitEnemy((Object*)(*o));}
+			void l3 (void** o) {fireObj((Object*)(*o));}
+			eachSet(stars, l1);
+			eachSet(enemy, l2);
+			eachSet(enemy, l3);
+			if (getObject(player)!=NULL) {
+				moveObj(player);
+				fireObj(player);
+			}
+			
+			void boundSet(Set* s) {
+				void bound(void** obj) {
+					if (getObject(*obj)==NULL) return;
+					Object* o = (Object*)(*obj);
+					Vector pos = *getPos(o);
+					if (getXInt(pos)>MAX_X || getXInt(pos)<MIN_X || getYInt(pos)>MAX_Y || getYInt(pos)<MIN_Y) {
+						destroyObject(o, 1);
+						almostRemoveFromSet(s, o);
+					}
+				}
+				eachSet(s, bound);
+			}
+			
+			boundSet(enemy);
+			boundSet(enemyM);
+			boundSet(allyM);
+			
+			void colE(void** m) {
+				void col(void** e) {
+					if (getObject(*e)==NULL || getObject(*m)==NULL) return;
+					if (touch((*m), (*e))) {
+						if (dammage(*m, *e)) {
+							destroySpaceShip((Object*)(*e));
+							almostRemoveFromSet(enemy, (Object*)(*e));
+						}
+					}
+				}
+				eachSet(enemy, col);
+			}
+			eachSet(allyM, colE);
+			
+			void colEM(void** m) {
+				if (getObject(player) == NULL || getObject(*m)==NULL) return;
+				if (touch((*m), player)) {
+					if (dammage(*m, player)) {
+						destroySpaceShip(player);
+						player=NULL;
+					}
+					majBar();
+				}
+			}
+			eachSet(enemyM, colEM);
+			
+			void colP(void** e) {
+				if (getObject(*e)==NULL || getObject(player)==NULL) return;
+				if (collision((Object*)(*e), player)) {
+					int d = dammage((Object*)(*e), player);
+					if (dammage(player, (Object*)(*e))) {
+						destroySpaceShip((Object*)(*e));
+						almostRemoveFromSet(enemy, (Object*)(*e));
+					}
+					if (d) {
+						destroySpaceShip(player);
+						player=NULL;
+					}
 				}
 				majBar();
 			}
+			eachSet(enemy, colP);
+			
+			iterate(s);
+			
 		}
-		eachSet(enemyM, colEM);
-		
-		void colP(void** e) {
-			if (collision((Object*)(*e), player)) {
-				int d = dammage((Object*)(*e), player);
-				if (dammage(player, (Object*)(*e))) {
-					destroySpaceShip((Object*)(*e));
-					almostRemoveFromSet(enemy, (Object*)(*e));
-				}
-				if (d) {
-					destroySpaceShip(player);
-					player=NULL;
-				}
-			}
-			majBar();
-		}
-		eachSet(enemy, colP);
-		
-		iterate(s);
-		renderScene(s, 1.0/(double)FPS);
 		
 		totalFrame++;
-		
 		last=new;
 		clock_gettime(CLOCK_REALTIME, &new) ;
 		accum=(new.tv_sec-last.tv_sec)+((new.tv_nsec-last.tv_nsec)/1000000000.0);
 		fps=(1/accum)*(1-smoothing)+fps*smoothing;
 		if (totalFrame%10==0) sprintf(strfps, "%.1f", fps);
+		
+		renderScene(s);
+		
 		MLV_delay_according_to_frame_rate();
 	}
 	
-	void destroyObj(void** o) {
+	/*void destroyObj(void** o) {
 		destroyObject(*o, 1);
+	}*/
+	
+	void destroyObj2(Object* o) {
+		destroyObject(o, 1);
 	}
+	
 	closeLevel();
 	renderEnd();
-	eachSet(enemy, destroyObj);
+	eachObjectScene(s, destroyObj2);
+	destroyScene(s);
 	destroySet(enemy);
+	destroySet(enemyM);
 	destroySet(allyM);
-	destroyObject(fr, 1);
+	destroySet(stars);
+	
 	MLV_free_window();
 	exit(0);
 }

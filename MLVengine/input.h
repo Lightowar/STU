@@ -1,6 +1,10 @@
 #ifndef __INPUT__
 #define __INPUT__
 
-#include <MLV/MLV_all.h>
+#include "vector.h"
+
+int isPressed (const char *key_string);
+Vector getMousePos();
+int click (int pos);
 
 #endif

@@ -24,7 +24,7 @@ RenderElem* readDir(char* dir) {
 	strcat(str, "/descriptor.data");
 	FILE* file = fopen(str, "r");
 	int i;
-	if (fscanf(file, "%lf\n", &(img->timeMax))==EOF) {
+	if (fscanf(file, "%d\n", &(img->timeMax))==EOF) {
 		fprintf(stdout, "error\n");
 		return NULL;
 	}
@@ -52,7 +52,7 @@ RenderElem* readDir(char* dir) {
 			fprintf(stdout, "error\n");
 			return NULL;
 		}
-		img->nbrImg=i;
+		img->nbrImg=x*y;
 		if (fscanf(file, "%s\n", c)==EOF) {
 			fprintf(stdout, "error\n");
 			return NULL;
@@ -69,7 +69,7 @@ RenderElem* readDir(char* dir) {
 		height=height/y;
 		for (jj=0; jj<y; jj++) {
 			for (ii=0; ii<x; ii++) {
-				img->elem[ii+jj*y] = MLV_copy_partial_image(image, width*ii, height*jj, width, height);
+				img->elem[ii+jj*x] = MLV_copy_partial_image(image, width*ii, height*jj, width, height);
 			}
 		}
 		MLV_free_image(image);
@@ -89,6 +89,6 @@ RenderElem* readDir(char* dir) {
 }
 
 MLV_Image* getImageRender(RenderElem* img, int time) {
-	MLV_Image* i = img->elem[(int)(time/img->timeMax)%img->nbrImg];
+	MLV_Image* i = img->elem[(time/img->timeMax)%img->nbrImg];
 	return i;
 }

@@ -30,7 +30,6 @@ void freeSet(Set* s) {
 void destroyChaine(Set* s, Maillon* m) {
 	if (m!=NULL) {
 		destroyChaine(s, m->next);
-		if (!(s->equ!=NULL && s->equ(m->elem, NULL))) free(m->elem);
 		free(m);
 	}
 }

@@ -17,7 +17,7 @@ struct renderElem {
 	char str[255];
 	int decX;
 	int decY;
-	double timeMax;
+	int timeMax;
     int size;
     MLV_Font* font;
 };
@@ -73,11 +73,17 @@ void renderInit(Scene* s) {
 
 void renderEnd() {
 	void freeImg(void** img) {
+		RenderElem* e = (RenderElem*)(*img);
 		int i;
-		for (i=0; i<(*(RenderElem**)img)->nbrImg; i++) {
-			MLV_free_image(((RenderElem*)(*img))->elem[i]);	
+		for (i=0; i<e->nbrImg; i++) {
+			MLV_free_image(e->elem[i]);	
 		}
-		free((RenderElem*)(*img));
+		if (e->font!=NULL) {
+			printf("%p\n", e->font);
+			MLV_free_font(e->font);
+		}
+		free(e->elem);
+		free(e);
 	}
 	eachHashset(renderMap, freeImg);
 	//destroyHashset(renderMap);
@@ -173,7 +179,7 @@ void drawObject(Scene* s, Object* o, int camEnable, int time) {
 			}
 			setRender(o, img);
 		}
-		MLV_draw_image(getImageRender(img, time), x-img->decX, y-img->decY);
+		MLV_draw_image(getImageRender(img, getFrameForAnim(o)), x-img->decX, y-img->decY);
 	}
 	if (getDrawType(o)==DRAW_OVAL) {
 		Vector* scale=getDrawScale(o);
@@ -192,8 +198,11 @@ void drawObject(Scene* s, Object* o, int camEnable, int time) {
 				font=(RenderElem*)malloc(sizeof(RenderElem));
 				initElem(font);
 				strcpy(font->str, str);
-				if (strcmp(font->str, "")==0) font->font = NULL;
-				else font->font = MLV_load_font(str, size);
+				if (strcmp(font->str, "")==0) {
+					font->font = NULL;
+				} else {
+					font->font = MLV_load_font(str, size);
+				}
 				font->size = size;
 				addInHashset(fontMap, font);
 			}
@@ -227,7 +236,7 @@ void debugObject(Scene* s, Object* o, int camEnable, double time) {
 	}
 }
 
-void renderScene(Scene* s, double time) {
+void renderScene(Scene* s) {
 	void drO(Object* o) {return drawObject(s, o, 1, getFrameForAnim(o));};
 	void drOp(Object* o) {return drawObject(s, o, 0, getFrameForAnim(o));};
 	MLV_clear_window( MLV_COLOR_BLACK );
@@ -237,7 +246,7 @@ void renderScene(Scene* s, double time) {
 	MLV_update_window();
 }
 
-void debugScene(Scene* s, double time) {
+void debugScene(Scene* s) {
 	void drO(Object* o) {return drawObject(s, o, 1, getFrameForAnim(o));};
 	void deO(Object* o) {return debugObject(s, o, 1, getFrameForAnim(o));};
 	void drOp(Object* o) {return drawObject(s, o, 0, getFrameForAnim(o));};

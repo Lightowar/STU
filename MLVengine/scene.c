@@ -13,12 +13,17 @@ Scene* initScene() {
 	return (Scene*)malloc(sizeof(Scene));
 }
 
+void freeScene(Scene* s) {
+	free(s);
+}
+
 int cmpEqu(Object* o1, Object* o2) {
 	return (getObject(o1)==getObject(o2));
 }
 
 Scene* newScene(int x, int y) {
 	Scene* s = initScene();
+	s->camera=NULL;
 	s->size=newVector(x, y);
 	int i;
 	for (i=0; i<NBR_LAYER; i++) {
@@ -27,6 +32,15 @@ Scene* newScene(int x, int y) {
 	}
 	return s;
 }
+
+void destroyScene(Scene* s) {
+	int i;
+	for (i=0; i<NBR_LAYER; i++) {
+		destroySet(s->set[i]);
+	}
+	freeScene(s);
+}
+
 void setCamera(Scene* s, Object* o) {
 	s->camera=o;
 }

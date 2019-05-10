@@ -65,7 +65,7 @@ Object* newObject() {
 	return o;
 }
 void destroyObject(Object* o, int hard) {
-	if (getObject(o)==NULL) return NULL;
+	if (getObject(o)==NULL) return;
 	if (hard) {
 		free((o)->carac);
 	}
@@ -157,6 +157,7 @@ void applyVit(Object* o) {
 }
 
 int liveAndDie(Object* o) {
+    o->frameForAnim++;
 	int i = getKillTime(o);
 	if (i<0) return -1;
 	if (i==0) {
@@ -164,7 +165,6 @@ int liveAndDie(Object* o) {
 		return 1;
 	}
 	setKillTime(o, i-1);
-    o->frameForAnim++;
 	return 0;	
 }
 

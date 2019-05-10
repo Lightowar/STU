@@ -8,6 +8,7 @@
 
 typedef struct scene Scene;
 Scene* newScene(int x, int y);
+void destroyScene(Scene* s);
 int addObject(Scene* s, Object* o, int layer);
 int removeObject(Scene* s, Object* o, int layer);
 void setCamera(Scene* s, Object* o);

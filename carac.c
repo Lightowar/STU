@@ -47,68 +47,65 @@ Vector posClockW(Vector init, int t) {
 Vector posSinH(Vector init, int t) {
 	return addVector(init, newVector(sinf(t/(float)FPS)*400.0, t*100.0/FPS));
 }
+Vector posLeftRight(Vector init, int t) {
+	if (t>100) return newVector(0, -100);
+	if ((t%200)<100) return addVector(init, newVector(100, 0));
+	return addVector(init, newVector(-100, 0));
+}
 
-void vitPlayer(Object* o) {
-	static float max=500.0/FPS;
-	static float acc=30.0/FPS;
-	Vector* vit=getVit(o);
-	float x=getX(*vit);
-	float y=getY(*vit);
+Vector getTargetVitPlayer(Object* o) {
+	if (mouse) {
+		Vector v = addVector(getMousePos(), newVector(-(SIZE_X/2-UI_SIZE/2), -SIZE_Y/2));
+		if (getX(v)>(SIZE_X/2-UI_SIZE/2)) setX(&v, SIZE_X/2-UI_SIZE/2);
+		return v;
+	}
 	float targetX=0;
 	float targetY=0;
-	if (MLV_get_keyboard_state(MLV_KEYBOARD_LEFT)==MLV_PRESSED) targetX-=max;
-	if (MLV_get_keyboard_state(MLV_KEYBOARD_DOWN)==MLV_PRESSED) targetY+=max;
-	if (MLV_get_keyboard_state(MLV_KEYBOARD_UP)==MLV_PRESSED) targetY-=max;
-	if (MLV_get_keyboard_state(MLV_KEYBOARD_RIGHT)==MLV_PRESSED) targetX+=max;
+	if (isPressed("LEFT")) targetX-=1;
+	if (isPressed("DOWN")) targetY+=1;
+	if (isPressed("UP")) targetY-=1;
+	if (isPressed("RIGHT")) targetX+=1;
 	if (targetX!=0 && targetY!=0) {
 		targetX*=0.707107;
 		targetY*=0.707107;
 	}
-	float accX=targetX-x;
-	float accY=targetY-y;
-	if (accX>acc)accX=acc;
-	if (accX<-acc)accX=-acc;
-	if (accY>acc)accY=acc;
-	if (accY<-acc)accY=-acc;
-	x+=accX;
-	y+=accY;
-	setX(vit, x);
-	setY(vit, y);
-	if (getX(*getPos(o))>(SIZE_X/2-UI_SIZE/2)) {
-		setX(getPos(o), (SIZE_X/2-UI_SIZE/2));
-		setX(getVit(o), 0);
+	targetX*=100;
+	targetY*=100;
+	targetX+=getX(*getPos(o));
+	targetY+=getY(*getPos(o));
+	if (targetX>(SIZE_X/2-UI_SIZE/2)) {
+		targetX=(SIZE_X/2-UI_SIZE/2);
 	}
-	if (getX(*getPos(o))<(-SIZE_X/2+UI_SIZE/2)) {
-		setX(getPos(o), (-SIZE_X/2+UI_SIZE/2));
-		setX(getVit(o), 0);
+	if (targetX<(-SIZE_X/2+UI_SIZE/2)) {
+		targetX=(-SIZE_X/2+UI_SIZE/2);
 	}
-	if (getY(*getPos(o))>(SIZE_Y/2)) {
-		setY(getPos(o), (SIZE_Y/2));
-		setY(getVit(o), 0);
+	if (targetY>(SIZE_Y/2)) {
+		targetY=(SIZE_Y/2);
 	}
-	if (getY(*getPos(o))<(-SIZE_Y/2)) {
-		setY(getPos(o), -(SIZE_Y/2));
-		setY(getVit(o), 0);
+	if (targetY<(-SIZE_Y/2)) {
+		targetY=(-SIZE_Y/2);
 	}
+	return newVector(targetX, targetY);
+}
+
+void vitPlayer(Object* o) {
 }
 
 void moveObj (Object* o) {
 	Carac* c=getCarac(o);
 	if (NULL==c) return;
 	switch (c->moveSet) {
-		/*
-		case 3: vitClockW(o, c->moveTime);
-			break;
-		case 2: vitClockW(o, -c->moveTime);
-			break;
-			* */
 		case 3: moveTo(o, posClockW(c->init, c->moveTime), 500.0/FPS, 30.0/FPS);
 			break;
 		case 2: moveTo(o, posClockA(c->init, c->moveTime), 500.0/FPS, 30.0/FPS);
 			break;
-		case 1: vitPlayer(o);
+		case 1:
+			if (mouse) moveTo(o, getTargetVitPlayer(o), 1000.0/FPS, 60.0/FPS);
+			else moveTo(o, getTargetVitPlayer(o), 500.0/FPS, 30.0/FPS);
 			break;
 		case 4: moveTo(o, posSinH(c->init, c->moveTime), 500.0/FPS, 30.0/FPS);
+			break;
+		case 5: moveTo(o, posLeftRight(c->init, c->moveTime), 500.0/FPS, 30.0/FPS);
 			break;
 	}
 	c->moveTime++;
@@ -117,8 +114,10 @@ void moveObj (Object* o) {
 void fireEnemy1 (Object* o) {
 	Carac* c = (Carac*)getCarac(o);
 	if (c->fireTime<=0) {
-		addToSet(enemyM, createMissile(o, newVector(0, 7), newVector(-5, 0)));
-		addToSet(enemyM, createMissile(o, newVector(0, 7), newVector(5, 0)));
+		if (getObject(player)==NULL)
+			addToSet(enemyM, createMissile(o, newVector(0, 2), newVector(0, 0), 5, 1));
+		else
+			addToSet(enemyM, createMissile(o, multiplie(normalize(addVector(*getPos(player), multiplie(*getPos(o), -1))), 2), newVector(0, 0), 5, 1));
 		c->fireTime=FPS;
 	}
 }
@@ -126,8 +125,8 @@ void fireEnemy1 (Object* o) {
 void fireEnemy2 (Object* o) {
 	Carac* c = (Carac*)getCarac(o);
 	if (c->fireTime<=0) {
-		addToSet(enemyM, createMissile(o, newVector(0, 7), newVector(-5, 0)));
-		addToSet(enemyM, createMissile(o, newVector(0, 7), newVector(5, 0)));
+		addToSet(enemyM, createMissile(o, newVector(0, 7), newVector(-5, 0), 3, 0));
+		addToSet(enemyM, createMissile(o, newVector(0, 7), newVector(5, 0), 3, 0));
 		c->fireTime=FPS;
 	}
 }
@@ -135,9 +134,9 @@ void fireEnemy2 (Object* o) {
 void firePlayer (Object* o) {
 	Carac* c = (Carac*)getCarac(o);
 	if (c->fireTime<=0) {
-		if (MLV_get_keyboard_state(MLV_KEYBOARD_SPACE)==MLV_PRESSED) {
-			addToSet(allyM, createMissile(o, newVector(0, -15), newVector(-5, 0)));
-			addToSet(allyM, createMissile(o, newVector(0, -15), newVector(5, 0)));
+		if (isPressed("SPACE") || click(0)) {
+			addToSet(allyM, createMissile(o, newVector(0, -15), newVector(-5, 0), 3, 0));
+			addToSet(allyM, createMissile(o, newVector(0, -15), newVector(5, 0), 3, 0));
 			c->fireTime=FPS/6;
 		} else {
 			c->fireTime=0;
