@@ -208,6 +208,19 @@ int touch(Object* o1, Object* o2) {
 	return 0;
 }
 
+int inside(Object* o, Vector v) {
+		float w=getX(*getHitbox(o))/2;
+		float h=getY(*getHitbox(o))/2;
+		
+		float x1=getX(*getPos(o));
+		float y1=getY(*getPos(o));
+		
+		float x2=getX(v);
+		float y2=getY(v);
+		
+		return (x1-w<x2 && x2<x1+w && y1-h<y2 && y2<y1+h);
+}
+
 void printObject(Object* o) {
 	printVector(o->pos);
 	printf(" - ");

@@ -3,4 +3,7 @@
 2 10 DATA/ss_enemy 3 2 5 35-30
 3 -1 DATA/laser 0 0 5 5-15
 4 10 DATA/ss_enemy 4 2 5 35-30
-5 -1 DATA/fast 0 0 5 15-15
+5 -1 DATA/ball1 0 0 5 15-15
+6 10 DATA/ss_enemy 5 2 5 35-30
+7 2000 DATA/boss 6 3 5 80-100
+8 10 DATA/ss_enemy 7 2 5 35-30

@@ -1,7 +1,7 @@
 CFLAGS = -g -O2 -Wall -Werror `pkg-config --cflags MLV`
 LDLIBS = `pkg-config --libs MLV`
 
-all: vector.o scene.o object.o render.o set.o hashset.o input.o
+all: vector.o scene.o object.o render.o set.o hashset.o input.o other.o
 	
 vector.o: vector.c
 	gcc -o vector.o -c vector.c $(CFLAGS)
@@ -26,6 +26,10 @@ input.o: input.c input.h
 	
 #hashmap.o: hashmap.c hashset.o
 #	gcc -o hashmap.o -c hashmap.c $(CFLAGS)
+
+
+other.o: other.c other.h
+	gcc -o other.o -c other.c $(CFLAGS) $(LDLIBS)
 
 clean:
 	rm -rf *.o

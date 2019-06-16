@@ -11,5 +11,6 @@ int almostRemoveFromSet(Set* s, void* o);
 void eachSet(Set* s, void (*function)(void**));
 void setEqual(Set* s, int (*equ)(void*, void*));
 void* isInSet(Set* s, void* o);
+void emptySet(Set* s);
 
 #endif

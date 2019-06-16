@@ -1,41 +1,71 @@
-32 0 1 4 0 -400
-32 0 1 4 0 -400
-32 0 1 4 0 -400
-32 0 1 4 0 -400
-32 1 1 4 0 -400
+0 0 3 DATA/borie
+0 1 2 Bienvenue dans cette mini-démo!\T'as une questus ?\Le jeu est encore un peut beugé (et absolument pas fini), mais tout devrait bien se passer.
+0 0 3 DATA/borie
+0 1 2 Utilise les touches fléchés + espace pour bouger, ou alors souris + clique gauche                                                                                                   .
+0 0 3 DATA/borie
+0 1 2 Prêt ? Here we go !                     
+
+
+32 0 1 1 100 -400
+32 0 1 1 100 -400
+32 0 1 1 100 -400
+32 0 1 1 100 -400
+32 0 1 1 100 -400
+
+32 0 1 2 -100 -400
+32 0 1 2 -100 -400
+32 0 1 2 -100 -400
+32 0 1 2 -100 -400
+32 0 1 2 -100 -400
+
+32 0 1 6 0 -500
+32 0 1 6 0 -490
+32 0 1 6 0 -480
+32 0 1 6 0 -470
+32 0 1 6 0 -460
+32 0 1 6 0 -450
+32 0 1 6 0 -440
+32 1 1 6 0 -430
 
 0 0 3 DATA/borie
-0 1 2 Incredibulus !\T'as une questus ?\blablabla texteee de remplissage pour tester l'affichage du texteee (de remplissage)
-0 0 3 .
+0 1 2 Incredibulus !\Mais ce n'est que le début. Prépares-toi à esquiver !
 
-32 0 1 1 100 -400
-32 0 1 1 100 -400
-32 0 1 1 100 -400
-32 0 1 1 100 -400
-32 0 1 1 100 -400
+32 0 1 4 0 -400
+32 0 1 4 0 -400
+32 0 1 4 0 -400
+32 0 1 4 0 -400
+32 0 1 4 0 -400
 
-32 0 1 2 -100 -400
-32 0 1 2 -100 -400
-32 0 1 2 -100 -400
-32 0 1 2 -100 -400
-32 0 1 2 -100 -400
+8 0 1 1 100 -400
+8 0 1 4 0 -400
+8 0 1 2 -100 -400
+8 0 1 1 100 -400
+8 0 1 4 0 -400
+8 0 1 2 -100 -400
+8 0 1 1 100 -400
+8 0 1 4 0 -400
+8 0 1 2 -100 -400
+8 0 1 1 100 -400
+8 0 1 4 0 -400
+8 0 1 2 -100 -400
+8 0 1 1 100 -400
+8 0 1 4 0 -400
+8 0 1 2 -100 -400
+8 0 1 1 100 -400
+8 0 1 4 0 -400
+8 0 1 2 -100 -400
+8 0 1 1 100 -400
+8 0 1 4 0 -400
+8 0 1 2 -100 -400
 
+0 1 1 7 0 -500
+0 0 3 DATA/borie
+0 1 2 Formidable !                        
 
-4 0 1 1 100 -400
-4 0 1 2 -100 -400
-4 0 1 1 100 -400
-4 0 1 2 -100 -400
-4 0 1 1 100 -400
-4 0 1 2 -100 -400
-4 0 1 1 100 -400
-4 0 1 2 -100 -400
-4 0 1 1 100 -400
-4 0 1 2 -100 -400
-4 0 1 1 100 -400
-4 0 1 2 -100 -400
-4 0 1 1 100 -400
-4 0 1 2 -100 -400
-4 0 1 1 100 -400
-4 0 1 2 -100 -400
-4 0 1 1 100 -400
-4 0 1 2 -100 -400
+1000 0 0
+0 0 3 DATA/borie
+0 1 2 Il semblerait que le jeu n'ait pas de fin. Si tu t'ennuies vraiment, tu peux toujours recommencer le niveau en appuyant sur "échap".                     
+
+1000 0 0
+0 0 3 DATA/borie
+0 1 2 Toujours là ? Parce que moi je m'en vais.

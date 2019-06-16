@@ -43,3 +43,7 @@ int readLine(int* type, void** object, int* time, int* prec) {
 	if (ret==EOF) return ret;
 	return 1;
 }
+
+void resetLevel() {
+	rewind(level);
+}

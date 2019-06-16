@@ -59,6 +59,7 @@ void setColor(Object* o, ObjColor color);
 void applyVit(Object* o);
 int liveAndDie(Object* o);
 int touch(Object* o1, Object* o2);
+int inside(Object* o, Vector v);
 void printObject(Object* o);
 
 #endif

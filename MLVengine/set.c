@@ -51,7 +51,7 @@ void* isInSet(Set* s, void* o) {
 int addToSet(Set* s, void* o) {
 	Maillon** m;
 	for (m=&(s->chaine); (*m)!=NULL; m=&(*m)->next) {
-		if ((*m)->elem==o || (s->equ!=NULL && s->equ((*m)->elem, o))) {
+		if (((*m)->elem==o || (s->equ!=NULL && s->equ((*m)->elem, o)))) {
 			return 0;
 		}
 	}
@@ -114,4 +114,15 @@ void eachSet(Set* s, void (*function)(void**)) {
 
 void setEqual(Set* s, int (*equ)(void*, void*)) {
 	s->equ=equ;
+}
+
+void emptySet(Set* s) {
+	Maillon* m = s->chaine;
+	Maillon* next;
+	while (m != NULL) {
+		next = m->next;
+		free(m);
+		m=next;
+	}
+	s->chaine = NULL;
 }

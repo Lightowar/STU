@@ -1,7 +1,6 @@
 #include "input.h"
 
 #include <string.h>
-
 #include <MLV/MLV_all.h>
 
 int isPressed (const char *key_string) {

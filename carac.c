@@ -1,7 +1,6 @@
 #include <math.h>
 #include "MLVengine/object.h"
 #include <stdlib.h>
-#include <MLV/MLV_all.h>
 
 typedef struct carac {
 	int lifePoint;
@@ -48,9 +47,17 @@ Vector posSinH(Vector init, int t) {
 	return addVector(init, newVector(sinf(t/(float)FPS)*400.0, t*100.0/FPS));
 }
 Vector posLeftRight(Vector init, int t) {
-	if (t>100) return newVector(0, -100);
-	if ((t%200)<100) return addVector(init, newVector(100, 0));
-	return addVector(init, newVector(-100, 0));
+	if (t>700) return newVector(0, -1000);
+	if ((t%300)<150) return addVector(init, newVector(400, 200));
+	return addVector(init, newVector(-400, 200));
+}
+
+Vector onPlace(Vector init, int t) {
+	return addVector(init, newVector(cosf(t/(float)FPS)*50.0, sinf(t/(float)FPS)*50.0+300));
+}
+
+Vector spiraleOut(Vector init, int t) {
+	return addVector(init, newVector(cosf(t/(float)FPS)*t*0.8, sinf(t/(float)FPS)*t*0.8));
 }
 
 Vector getTargetVitPlayer(Object* o) {
@@ -88,7 +95,9 @@ Vector getTargetVitPlayer(Object* o) {
 	return newVector(targetX, targetY);
 }
 
-void vitPlayer(Object* o) {
+void switchControle() {
+	if (mouse && isPressed("SPACE")) mouse = 0;
+	if (!mouse && click(0)) mouse = 1;
 }
 
 void moveObj (Object* o) {
@@ -100,12 +109,17 @@ void moveObj (Object* o) {
 		case 2: moveTo(o, posClockA(c->init, c->moveTime), 500.0/FPS, 30.0/FPS);
 			break;
 		case 1:
+			switchControle();
 			if (mouse) moveTo(o, getTargetVitPlayer(o), 1000.0/FPS, 60.0/FPS);
-			else moveTo(o, getTargetVitPlayer(o), 500.0/FPS, 30.0/FPS);
+			else moveTo(o, getTargetVitPlayer(o), 700.0/FPS, 30.0/FPS);
 			break;
 		case 4: moveTo(o, posSinH(c->init, c->moveTime), 500.0/FPS, 30.0/FPS);
 			break;
 		case 5: moveTo(o, posLeftRight(c->init, c->moveTime), 500.0/FPS, 30.0/FPS);
+			break;
+		case 6: moveTo(o, onPlace(c->init, c->moveTime), 200.0/FPS, 10.0/FPS);
+			break;
+		case 7: moveTo(o, spiraleOut(c->init, c->moveTime), 500.0/FPS, 30.0/FPS);
 			break;
 	}
 	c->moveTime++;
@@ -114,20 +128,32 @@ void moveObj (Object* o) {
 void fireEnemy1 (Object* o) {
 	Carac* c = (Carac*)getCarac(o);
 	if (c->fireTime<=0) {
-		if (getObject(player)==NULL)
+		if (getObject(c->target)==NULL)
 			addToSet(enemyM, createMissile(o, newVector(0, 2), newVector(0, 0), 5, 1));
 		else
-			addToSet(enemyM, createMissile(o, multiplie(normalize(addVector(*getPos(player), multiplie(*getPos(o), -1))), 2), newVector(0, 0), 5, 1));
+			addToSet(enemyM, createMissile(o, multiplie(normalize(addVector(*getPos(c->target), multiplie(*getPos(o), -1))), 2), newVector(0, 0), 5, 1));
 		c->fireTime=FPS;
 	}
 }
 
-void fireEnemy2 (Object* o) {
+Object* createSpaceShipe (int i);
+
+void fireBoss1 (Object* o) {
 	Carac* c = (Carac*)getCarac(o);
 	if (c->fireTime<=0) {
-		addToSet(enemyM, createMissile(o, newVector(0, 7), newVector(-5, 0), 3, 0));
-		addToSet(enemyM, createMissile(o, newVector(0, 7), newVector(5, 0), 3, 0));
-		c->fireTime=FPS;
+		Object* o2 = createSpaceShipe(8);
+		setPos(o2, addVector(*getPos(o), newVector(0, -30)));
+		((Carac*)getCarac(o2))->target = ((Carac*)getCarac(o))->target;
+		((Carac*)getCarac(o2))->init=*getPos(o2);
+		addObject(s, o2, 1);
+		addToSet(enemy, o2);
+		c->fireTime=FPS*1;
+	}
+	if (c->fireTime%10 == 0 && c->fireTime < FPS*0.8) {
+		if (getObject(c->target)==NULL)
+			addToSet(enemyM, createMissile(o, newVector(0, 2), newVector(0, 0), 5, 1));
+		else
+			addToSet(enemyM, createMissile(o, multiplie(normalize(addVector(*getPos(c->target), multiplie(*getPos(o), -1))), 2), newVector(0, 0), 5, 1));
 	}
 }
 
@@ -135,11 +161,11 @@ void firePlayer (Object* o) {
 	Carac* c = (Carac*)getCarac(o);
 	if (c->fireTime<=0) {
 		if (isPressed("SPACE") || click(0)) {
-			addToSet(allyM, createMissile(o, newVector(0, -15), newVector(-5, 0), 3, 0));
-			addToSet(allyM, createMissile(o, newVector(0, -15), newVector(5, 0), 3, 0));
+			addToSet(allyM, createMissile(o, newVector(0, -15), newVector(-5, 0), 3, 1));
+			addToSet(allyM, createMissile(o, newVector(0, -15), newVector(5, 0), 3, 1));
 			c->fireTime=FPS/6;
 		} else {
-			c->fireTime=0;
+			c->fireTime=1;
 		}
 	}
 }
@@ -151,6 +177,8 @@ void fireObj(Object* o) {
 		case 1: firePlayer(o);
 			break;
 		case 2: fireEnemy1(o);
+			break;
+		case 3: fireBoss1(o);
 			break;
 	}
 	c->fireTime--;

@@ -101,10 +101,8 @@ void drawTextSimple(int x, int y, char line[], MLV_Font* font, MLV_Color color) 
 		MLV_draw_text_with_font(x, y, line, font, color);
 }
 
-void drawText (Object* o, MLV_Font* font) {
+void drawText (Object* o, MLV_Font* font, int x, int y) {
 	MLV_Color c = getOjectColor(o);
-	int x = getX(*getPos(o));
-	int y = getY(*getPos(o));
 	int sizeY = getY(*getDrawScale(o));
 	char line[MAX_TEXT_SIZE] = "";
 	char* str = getDrawText(o);
@@ -208,7 +206,7 @@ void drawObject(Scene* s, Object* o, int camEnable, int time) {
 			}
 			setRender(o, font);
 		}
-		drawText(o, font->font);
+		drawText(o, font->font, x, y);
 	}
 }
 

@@ -3,23 +3,27 @@
 #include "MLVengine/object.h"
 #include "MLVengine/render.h"
 #include "MLVengine/input.h"
+#include "MLVengine/other.h"
 
 #include <stdio.h>
-#include <MLV/MLV_all.h>
 #include <time.h>
 #include <math.h>
+#include <unistd.h>
+#include <string.h>
 
 #define UI_SIZE 300
 #define SIZE_X 1280
 #define SIZE_Y 720
-#define MAX_X ((SIZE_X-UI_SIZE)/2+100)
+#define MAX_X ((SIZE_X-UI_SIZE)/2+150)
 #define MIN_X -MAX_X
-#define MAX_Y (SIZE_Y/2+100)
+#define MAX_Y (SIZE_Y/2+150)
 #define MIN_Y -MAX_Y
 
 #define FPS 60
 
 #define TEXT_SIZE 65536
+
+#define SIZE_MENU_1 2
 
 Set* enemy;
 Set* enemyM;
@@ -27,7 +31,7 @@ Set* allyM;
 Object* player;
 Scene* s;
 
-int mouse=1;
+int mouse=0;
 
 Object* createMissile (Object* o, Vector vit, Vector dec, int id, int global);
 #include "carac.c"
@@ -37,6 +41,13 @@ Object* createMissile (Object* o, Vector vit, Vector dec, int id, int global);
 #include "other.c"
 
 int main (int argc, char* argv[]) {
+	
+	char *dirsep = strrchr( argv[0], '/' );
+	if( dirsep != NULL ) dirsep = ".";
+	
+	if (chdir(dirsep)==-1) {
+		fprintf(stdout, "error\n");
+	}
 	
 	s = newScene(SIZE_X, SIZE_Y);
 	renderInit(s);
@@ -57,7 +68,7 @@ int main (int argc, char* argv[]) {
 	float accum;
 	float smoothing=0.9;
 	float fps=FPS;
-	MLV_change_frame_rate(fps);
+	changeFrameRate(fps);
 	
 	int totalFrame=0;
 	
@@ -70,7 +81,7 @@ int main (int argc, char* argv[]) {
 		o = newObject();
 		Vector* pos=getPos(o);
 		randomiseStar(o);
-		setY(pos, MLV_get_random_double(MIN_Y, MAX_Y));
+		setY(pos, randomDouble(MIN_Y, MAX_Y));
 		addObject(s, o, 0);
 		addToSet(stars, o);
 	}
@@ -88,24 +99,23 @@ int main (int argc, char* argv[]) {
 	Vector* vit;
 	Vector* pos;
 	
-	player = createSpaceShipe(0);
-	vit=getVit(player);
-	pos=getPos(player);
-	setY(pos, 300);
-	*vit=(Vector){0, 0};
-	addObject(s, player, 2);
-	((Carac*)getCarac(player))->fireTime=0;
-	
 	Object* cam=newObject();
 	setPos(cam, newVector(UI_SIZE/2, 0));
 	setCamera(s, cam);
 	
-	Object* UI=newObject();
-	addObject(s, UI, 3);
-	setDrawType(UI, DRAW_RECT);
-	setDrawScale(UI, newVector(UI_SIZE, SIZE_Y));
-	setPos(UI, newVector(SIZE_X-UI_SIZE, 0));
-	setColor(UI, (ObjColor){50, 50, 50, 255});
+	Object* UI1=newObject();
+	addObject(s, UI1, 3);
+	setDrawType(UI1, DRAW_RECT);
+	setDrawScale(UI1, newVector(UI_SIZE, SIZE_Y));
+	setPos(UI1, newVector(SIZE_X-UI_SIZE, 0));
+	setColor(UI1, (ObjColor){80, 86, 99, 255});
+	
+	Object* UI2=newObject();
+	addObject(s, UI2, 3);
+	setDrawType(UI2, DRAW_RECT);
+	setDrawScale(UI2, newVector(UI_SIZE-10, SIZE_Y-10));
+	setPos(UI2, newVector(SIZE_X-UI_SIZE+5, 0+5));
+	setColor(UI2, (ObjColor){53, 58, 68, 255});
 	
 	Object* bar1=newObject();
 	setDrawType(bar1, DRAW_RECT);	
@@ -130,12 +140,12 @@ int main (int argc, char* argv[]) {
 	Object* textBox=newObject();
 	setDrawType(textBox, DRAW_TEXT);
 	setDrawString(textBox, "DATA/BebasNeue-Regular.ttf");
-	setDrawScale(textBox, newVector(20, 20));
+	setDrawScale(textBox, newVector(0, 30));
 	setPos(textBox, newVector(SIZE_X-UI_SIZE+10, SIZE_Y/2));
 	setTextBox(textBox, newVector(UI_SIZE-20 ,SIZE_Y));
 	addObject(s, textBox, 3);
 	setDrawText(textBox, partialText);
-	setColor(textBox, (ObjColor){255, 0, 0, 255});
+	setColor(textBox, (ObjColor){152, 242, 215, 255});
 	
 	Object* face=newObject();
 	setDrawType(face, DRAW_IMAGE);
@@ -144,10 +154,81 @@ int main (int argc, char* argv[]) {
 	setPos(face, newVector(SIZE_X-(UI_SIZE/2), SIZE_Y/2-110));
 	addObject(s, face, 3);
 	
+	Object* menu1[SIZE_MENU_1*3];
 	
-	void vitEnemy(void* o) {
-		moveObj((Object*)(o));
+	Object* restartBox1=newObject();
+	setDrawType(restartBox1, DRAW_RECT);
+	setDrawScale(restartBox1, newVector(310, 70));
+	setPos(restartBox1, newVector((SIZE_X-UI_SIZE-300)/2-5, (SIZE_Y-260)/2-5));
+	addObject(s, restartBox1, 3);
+	setColor(restartBox1, (ObjColor){80, 86, 99, 255});
+	menu1[0]=restartBox1;
+	
+	Object* restartBox2=newObject();
+	setDrawType(restartBox2, DRAW_RECT);
+	setDrawScale(restartBox2, newVector(300, 60));
+	setPos(restartBox2, newVector((SIZE_X-UI_SIZE-300)/2, (SIZE_Y-260)/2));
+	addObject(s, restartBox2, 3);
+	setColor(restartBox2, (ObjColor){53, 58, 68, 255});
+	menu1[1]=restartBox2;
+	
+	Object* restart=newObject();
+	setDrawType(restart, DRAW_TEXT);
+	setDrawString(restart, "DATA/conthrax-sb.ttf");
+	setDrawScale(restart, newVector(0, 50));
+	setPos(restart, newVector((SIZE_X-UI_SIZE-300)/2+10, (SIZE_Y-260)/2));
+	addObject(s, restart, 3);
+	setDrawText(restart, "restart");
+	setColor(restart, (ObjColor){152, 242, 215, 255});
+	menu1[2]=restart;
+	
+	Object* quitBox1=newObject();
+	setDrawType(quitBox1, DRAW_RECT);
+	setDrawScale(quitBox1, newVector(310, 70));
+	setPos(quitBox1, newVector((SIZE_X-UI_SIZE-300)/2-5, (SIZE_Y-60)/2-5));
+	addObject(s, quitBox1, 3);
+	setColor(quitBox1, (ObjColor){80, 86, 99, 255});
+	menu1[3]=quitBox1;
+	
+	Object* quitBox2=newObject();
+	setDrawType(quitBox2, DRAW_RECT);
+	setDrawScale(quitBox2, newVector(300, 60));
+	setPos(quitBox2, newVector((SIZE_X-UI_SIZE-300)/2, (SIZE_Y-60)/2));
+	addObject(s, quitBox2, 3);
+	setColor(quitBox2, (ObjColor){53, 58, 68, 255});
+	menu1[4]=quitBox2;
+	
+	Object* quit=newObject();
+	setDrawType(quit, DRAW_TEXT);
+	setDrawString(quit, "DATA/conthrax-sb.ttf");
+	setDrawScale(quit, newVector(0, 50));
+	setPos(quit, newVector((SIZE_X-UI_SIZE-300)/2+10, (SIZE_Y-60)/2));
+	addObject(s, quit, 3);
+	setDrawText(quit, "quit");
+	setColor(quit, (ObjColor){152, 242, 215, 255});
+	menu1[5]=quit;
+	
+	int selected1 = -1;
+	
+	void menuOn(Object* menu[], int n) {
+		int i;
+		for (i=0; i<n; i++) {
+			setDrawType(menu[3*i], DRAW_RECT);
+			setDrawType(menu[3*i+1], DRAW_RECT);
+			setDrawType(menu[3*i+2], DRAW_TEXT);
+		}
 	}
+	
+	void menuOff(Object* menu[], int n) {
+		int i;
+		for (i=0; i<n; i++) {
+			setDrawType(menu[3*i], DRAW_NONE);
+			setDrawType(menu[3*i+1], DRAW_NONE);
+			setDrawType(menu[3*i+2], DRAW_NONE);
+		}
+	}
+	
+	menuOff(menu1, 2);
 	
 	void majBar() {
 		float percent;
@@ -160,6 +241,22 @@ int main (int argc, char* argv[]) {
 		setDrawScale(bar2, newVector((30.0*8.0-8.0)*percent, 30-8));
 	}
 	
+	void initPlayer () {
+		player = createSpaceShipe(0);
+		vit=getVit(player);
+		pos=getPos(player);
+		setY(pos, 300);
+		*vit=(Vector){0, 0};
+		addObject(s, player, 2);
+		((Carac*)getCarac(player))->fireTime=0;
+		majBar();
+	}
+	initPlayer();
+
+	void vitEnemy(void* o) {
+		moveObj((Object*)(o));
+	}
+	
 	int type;
 	void* object;
 	int wait=0;
@@ -170,8 +267,12 @@ int main (int argc, char* argv[]) {
 	int paused=0;
 	int pausedPressed=0;
 	
-	while (!isPressed("q")) {
-		if (isPressed("ESCAPE") && pausedPressed==0) {
+	int dead() {
+		return getObject(player)==NULL;
+	}
+	
+	while (!(selected1==1 && isPressed("RETURN"))) {
+		if (isPressed("ESCAPE") && pausedPressed==0 && !dead()) {
 			paused=!paused;
 			pausedPressed=3;
 		} else {
@@ -188,6 +289,7 @@ int main (int argc, char* argv[]) {
 						addObject(s, o, 1);
 						addToSet(enemy, o);
 						((Carac*)getCarac(o))->init=*getPos(o);
+						((Carac*)getCarac(o))->target=player;
 						if (prec==1) objToWait=o;
 						else objToWait=NULL;
 						break;
@@ -220,18 +322,18 @@ int main (int argc, char* argv[]) {
 				textBoxAdvance=0;
 				sizeText=0;
 				textToWait=0;
+				setDrawString(face, "");
 			}
-			/*MLV_get_keyboard_state*/
 			if (!isPressed("RETURN")) {
 				enterPressed=0;
-			} else {		
+			} else {
 				if (textBoxAdvance<(sizeText*2) && !enterPressed) {
 					enterPressed=1;
 					if (textBoxAdvance<sizeText) {
 						textBoxAdvance=sizeText;
 						strcpy(partialText, text);
 					} else {
-						textBoxAdvance=2*sizeText;
+						textBoxAdvance = 2*sizeText;
 					}
 				}
 			}
@@ -263,7 +365,7 @@ int main (int argc, char* argv[]) {
 			boundSet(enemy);
 			boundSet(enemyM);
 			boundSet(allyM);
-			
+				
 			void colE(void** m) {
 				void col(void** e) {
 					if (getObject(*e)==NULL || getObject(*m)==NULL) return;
@@ -307,8 +409,7 @@ int main (int argc, char* argv[]) {
 			}
 			eachSet(enemy, colP);
 			
-			iterate(s);
-			
+			iterate(s);			
 		}
 		
 		totalFrame++;
@@ -318,14 +419,57 @@ int main (int argc, char* argv[]) {
 		fps=(1/accum)*(1-smoothing)+fps*smoothing;
 		if (totalFrame%10==0) sprintf(strfps, "%.1f", fps);
 		
+		if (paused || dead()) {
+			menuOn(menu1, SIZE_MENU_1);
+			for (i=0; i<SIZE_MENU_1; i++) {
+				setColor(menu1[3*i], (ObjColor){80, 86, 99, 255});
+			}
+			if (isPressed("DOWN")) {
+				if (selected1==-1) {
+					selected1=SIZE_MENU_1-1;
+				} else {
+					if (selected1<SIZE_MENU_1-1)selected1++;
+				}
+			}
+			if (isPressed("UP")) {
+				if (selected1==-1) {
+					selected1=0;
+				} else {
+					if (selected1>0)selected1--;
+				}
+			}
+			if (selected1!=-1) setColor(menu1[selected1*3], (ObjColor){152, 242, 215, 255});
+		} else {
+			menuOff(menu1, 2);
+			selected1=-1;
+			setColor(quitBox1, (ObjColor){80, 86, 99, 255});
+		}
+	
+		void destroyObj1(void** o) {
+			destroyObject((Object*)*o, 1);
+		}
+		
+		if (selected1==0 && isPressed("RETURN")) {
+			resetLevel();
+			eachSet(enemy, destroyObj1);
+			eachSet(enemyM, destroyObj1);
+			eachSet(allyM, destroyObj1);
+			emptySet(enemy);
+			emptySet(enemyM);
+			emptySet(allyM);
+			destroyObject(player, 1);
+			initPlayer();
+			majBar();
+			paused=0;
+			wait=0;
+			objToWait=NULL;
+			textToWait=0;
+		}
+		
 		renderScene(s);
 		
-		MLV_delay_according_to_frame_rate();
+		waitEndFrame();
 	}
-	
-	/*void destroyObj(void** o) {
-		destroyObject(*o, 1);
-	}*/
 	
 	void destroyObj2(Object* o) {
 		destroyObject(o, 1);
@@ -340,6 +484,5 @@ int main (int argc, char* argv[]) {
 	destroySet(allyM);
 	destroySet(stars);
 	
-	MLV_free_window();
 	exit(0);
 }

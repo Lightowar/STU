@@ -1,2 +1,2 @@
 make mainEngine
-./main
+/main
